@@ -1,9 +1,9 @@
-from .utils import SafeMember
+from .utils import ABCSafeMember
 
 import abc
 
 
-class GameView(SafeMember):
+class GameView(ABCSafeMember):
     """RGB"""
     __slots__ = ('_window',)
 
@@ -15,18 +15,30 @@ class GameView(SafeMember):
     POINT_COLOR = (0, 255, 0)  # green
     VIEW_CONTROLLER: object = None
 
-    def __init__(self):
+    def __init__(self, window):
         assert self.VIEW_CONTROLLER is not None, NotImplementedError("please assign an object for VIEW_CONTROLLER")
-        self._window = self.game_view_init()
+        self._window = window
 
     @abc.abstractmethod
-    def game_view_init(self) -> object:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def view_update(self):
-        raise NotImplementedError
+    def update(self):
+        ...
 
     @abc.abstractmethod
     def clear_canvas(self):
-        raise NotImplementedError
+        ...
+
+    @abc.abstractmethod
+    def destroy_view(self):
+        ...
+
+
+class KeyboardController(ABCSafeMember):
+    __slots__ = ()
+    KEYBOARD_CONTROLLER: object = None
+
+    def __init__(self):
+        assert self.KEYBOARD_CONTROLLER is not None, NotImplementedError('KEYBOARD_CONTROLLER is None')
+
+    @abc.abstractmethod
+    def get_event(self):
+        ...

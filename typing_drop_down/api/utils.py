@@ -1,7 +1,12 @@
-__all__ = ('SafeMember', 'ShowTestDescription', 'cached_property')
+__all__ = (
+    'SafeMember', 'ABCSafeMember',
+    'ShowTestDescription',
+    'cached_property'
+)
 
 from unittest import TestCase
 import sys
+import abc
 
 
 class MetaMemberControl(type):
@@ -43,6 +48,23 @@ class MetaMemberControl(type):
 
 
 class SafeMember(metaclass=MetaMemberControl):
+    __slots__ = ()
+
+    def __getattribute__(self, item):
+        """
+        is just for IDE recognize.
+        """
+        return super().__getattribute__(item)
+
+
+class ChainMeta(abc.ABCMeta, MetaMemberControl):
+    def __new__(cls, name, bases, attr):
+        instance = MetaMemberControl.__new__(cls, name, bases, attr)
+        instance = abc.ABCMeta.__new__(cls, name, bases, attr)
+        return instance
+
+
+class ABCSafeMember(metaclass=ChainMeta):
     __slots__ = ()
 
     def __getattribute__(self, item):
