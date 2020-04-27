@@ -13,28 +13,8 @@ from pathlib import Path
 
 from .api.utils import SafeMember
 from .api import generics
-from .views import PyGameView
-
-
-class PyGameKeyboard(generics.KeyboardController):
-    __slots__ = ()
-    KEYBOARD_CONTROLLER = pygame
-
-    def get_event(self):
-        for event in pygame.event.get():
-            yield event
-
-    @staticmethod
-    def is_key_down_event(event: EventType):
-        return True if event.type == pygame.KEYDOWN else False
-
-    @staticmethod
-    def is_quit_event(event: EventType):
-        return True if event.type == pygame.QUIT else False
-
-    @staticmethod
-    def get_press_key(event) -> str:
-        return event.unicode  # <- case-sensitive  # pygame.key.name(event.key)
+from .views import PyGameView, GameOverView
+from .controllers import PyGameKeyboard
 
 
 class TypingDropDown(
@@ -42,12 +22,14 @@ class TypingDropDown(
     PyGameView,
     SafeMember,
 ):
-    __slots__ = ('_word_set',) + PyGameView.__slots__
+    __slots__ = ('_word_set',
+                 '_game_over_view'
+                 ) + PyGameView.__slots__
 
-    SPEED = 0.25
+    SPEED = 2
 
     def __init__(self, words_file: Path):
-        PyGameView.__init__(self)
+        PyGameView.__init__(self, caption_name='Typing Drop down')
         with open(str(words_file)) as f:
             self._word_set = f.read().splitlines()
         if len(self._word_set) == 0:
@@ -68,6 +50,7 @@ class TypingDropDown(
     def create_game(self):
         point, x_word, y_word, chosen_word, pressed_word = self.init_game()
         while 1:
+            clock = pygame.time.Clock()
             self.clear_canvas()
             y_word += self.SPEED
             self.draw_text(chosen_word, (x_word, y_word), self.FORE_COLOR)
@@ -86,11 +69,13 @@ class TypingDropDown(
                     else:
                         pressed_word = ''
 
+            clock.tick(60)  # Make sure that the FPS is keeping to this value.
+
             if y_word > self.HEIGHT - 5:
-                if self.ask_retry():
-                    point, x_word, y_word, chosen_word, pressed_word = self.init_game()
-                else:
-                    self.exit_app()
+                # self.game_over_view.start()
+                game_over_view = GameOverView(caption_name='Game over', exit_fun=lambda: self.exit_app())
+                game_over_view.create_view()
+                point, x_word, y_word, chosen_word, pressed_word = self.init_game()
 
     @staticmethod
     def ask_retry():
