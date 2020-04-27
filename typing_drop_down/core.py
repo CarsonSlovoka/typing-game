@@ -1,59 +1,64 @@
+__all__ = ('TypingDropDown',)
+
+from typing import Tuple
 import pygame
 import random
 from pathlib import Path
 
-pygame.init()
-
-X = 600
-Y = 400
-
-
-class GameView:
-    __slots__ = ()
-    # RGB
-    BACKGROUND_COLOR = background = (255, 200, 150)
-    DEFAULT_COLOR = (0, 0, 255)  # blue
-    POINT_COLOR = (0, 255, 0)  # green
-    FONT = ''
-
-
-class DropDownController:
-    __slots__ = ()
-    SPEED = 0.03
-
-
-class GameWindow:
-    __slots__ = ()
-    HEIGHT = 600
-    WIDTH = 400
+from .api.utils import SafeMember, cached_property
+from .api import mixins
+from .api import generics
 
 
 class TypingDropDown(
-    GameWindow,
-    DropDownController,
-    GameView
+    mixins.FontModelMixin,
+    # KeyboardController,
+    generics.GameView,
+    SafeMember,
 ):
-    __slots__ = ('_word_set', '_window')
-    FONT = pygame.font.SysFont("ComicSansMs", 32)
+    __slots__ = ('_word_set',) + generics.GameView.__slots__
+
+    SPEED = 0.03
+
+    FONT_NAME = 'ComicSansMs'
+    VIEW_CONTROLLER = pygame
 
     def __init__(self, words_file: Path):
-        pygame.init()
-        self._window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
-        pygame.display.set_caption('Typing Drop down')
+        generics.GameView.__init__(self)
         with open(str(words_file)) as f:
             self._word_set = f.read().splitlines()
+        if len(self._word_set) == 0:
+            raise RuntimeError(f'There is no content at the ``{words_file.absolute()}``')
+
+    def game_view_init(self):
+        self.view_obj.init()
+        self.view_obj.display.set_caption('Typing Drop down')
+        return self.view_obj.display.set_mode((self.WIDTH, self.HEIGHT))
 
     @property
-    def window(self):
-        return self._window
+    def view_obj(self):
+        return self.VIEW_CONTROLLER
+
+    @cached_property
+    def font(self):
+        return self.view_obj.font.SysFont(self.FONT_NAME, 32)
+
+    def view_update(self):
+        self.view_obj.display.update()
+
+    def clear_canvas(self):
+        self.window.fill(self.BACKGROUND_COLOR)  # clear all for redraw
+
+    def draw_text(self, text: str, position: Tuple[int, int], font_color=None):
+        """
+        position: (x, y)
+        """
+        text = self.font.render(text, True, font_color)
+        self.window.blit(text, position)
 
     def new_word(self):
         chosen_word = random.choice(self._word_set)
         return chosen_word
-
-    def draw_text(self, text: str, x, y, font_color=None):
-        text = self.FONT.render(text, True, self.DEFAULT_COLOR)
-        self.window.blit(text, (x, y))
 
     def init_game(self):
         point = 0
@@ -63,15 +68,14 @@ class TypingDropDown(
         pressed_word = ''
         return point, x, y, chosen_word, pressed_word
 
-    def game_start(self):
+    def create_game(self):
         point, x_word, y_word, chosen_word, pressed_word = self.init_game()
         while 1:
             self.window.fill(self.BACKGROUND_COLOR)  # clear all for redraw
             y_word += self.SPEED
-            self.draw_text(chosen_word, x_word, y_word)
-            point_caption = self.FONT.render(str(point), True, self.POINT_COLOR)
-            self.window.blit(point_caption, (10, 5))
-            pygame.display.update()
+            self.draw_text(chosen_word, (x_word, y_word), self.FORE_COLOR)
+            self.draw_text(str(point), (10, 5), font_color=self.POINT_COLOR)
+            self.view_update()
             for event in pygame.event.get():
                 event_type = event.type
                 if event_type == pygame.QUIT:
@@ -91,7 +95,3 @@ class TypingDropDown(
                 event = pygame.event.wait()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:  # press space to restart
                     point, x_word, y_word, chosen_word, pressed_word = self.init_game()
-
-
-obj = TypingDropDown(Path('words.txt'))
-obj.game_start()
