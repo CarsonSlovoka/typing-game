@@ -1,3 +1,4 @@
+from typing import Tuple
 import pygame
 from pygame.event import EventType
 
@@ -8,12 +9,12 @@ class PyGameKeyboard(generics.KeyboardController):
     __slots__ = ()
     KEYBOARD_CONTROLLER = pygame
 
-    def get_event(self):
+    def get_event(self) -> Tuple[EventType]:
         for event in pygame.event.get():
             yield event
 
     @staticmethod
-    def is_key_down_event(event: EventType):
+    def is_key_down_event(event: EventType) -> bool:
         return True if event.type == pygame.KEYDOWN else False
 
     @staticmethod
@@ -25,5 +26,17 @@ class PyGameKeyboard(generics.KeyboardController):
         return True if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE else False
 
     @staticmethod
+    def is_press_enter_event(event: EventType):
+        return True if event.type == pygame.KEYDOWN and event.key == pygame.K_KP_ENTER else False
+
+    @staticmethod
     def get_press_key(event) -> str:
         return event.unicode  # <- case-sensitive  # pygame.key.name(event.key)
+
+    @property
+    def key_escape(self):
+        return pygame.K_ESCAPE
+
+    @property
+    def key_enter(self):
+        return pygame.K_RETURN

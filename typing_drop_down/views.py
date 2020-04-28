@@ -74,7 +74,7 @@ class PyGameButton(SafeMember):
                  '_is_hovered'
                  )
 
-    def __init__(self, text, x=0, y=0, width=100, height=50, command: Callable = None,
+    def __init__(self, text, x, y, width, height, command: Callable = None,
                  default_color: COLOR = COLOR.GREEN,
                  hovered_color: COLOR = COLOR.RED):
         self._command = command
@@ -124,21 +124,29 @@ class GameOverView(
     PyGameView,
     SafeMember,
 ):
-    __slots__ = ('_is_running',
+    __slots__ = ('_view',
+                 '_is_running',
                  '_btn_continue', '_btn_exit') + PyGameView.__slots__
 
     def __init__(self, caption_name: str,
                  continue_fun: Callable = None, exit_fun: Callable = None):
         PyGameView.__init__(self, caption_name)
         self._is_running = True
-        self._btn_continue = PyGameButton('Continue', x=200, y=50, width=140, height=50, command=lambda: self.on_click_continue_btn(continue_fun))
-        self._btn_exit = PyGameButton('Exit', x=200, y=150, width=140, height=50, command=lambda: self.on_click_exit_btn(exit_fun))
+        btn_width, btn_height = 140, 50
+        x = (self.WIDTH - btn_width) / 2
+        y = (self.HEIGHT - (2*btn_height)) / 5  # Divide into 5 equal parts that share 2 buttons.
+        self._btn_continue = PyGameButton('Restart', x, int(y*2), btn_width, btn_height, command=lambda: self.on_click_continue_btn(continue_fun))
+        self._btn_exit = PyGameButton('Exit', x, int(y*3), btn_width, btn_height, command=lambda: self.on_click_exit_btn(exit_fun))
+        self._view = self._create_view()
+        self._view.send(None)  # init
 
-    def start(self):
+    def show(self):
         self._is_running = True
+        self.view.send(None)
 
-    def stop(self):
+    def hide(self):
         self._is_running = False
+        self.view.send(None)
 
     def on_click_continue_btn(self, sub_process: Callable = None):
         self._is_running = False
@@ -150,24 +158,27 @@ class GameOverView(
         if sub_process:
             sub_process()
 
-    def create_view(self):
-
+    def _create_view(self):
         clock = pygame.time.Clock()
+        dict_action = {self.key_enter: lambda: self.on_click_continue_btn(self.btn_continue.command),
+                       self.key_escape: lambda: self.on_click_exit_btn(self.btn_exit.command)}
+        while 1:
+            yield
+            while self.is_running:
+                btn_list: List[PyGameButton] = [self.btn_continue, self.btn_exit]
 
-        while self.is_running:
+                for event in self.get_event():
+                    if self.is_key_down_event(event):
+                        fun = dict_action.get(event.key)
+                        if fun:
+                            fun()
 
-            btn_list: List[PyGameButton] = [self.btn_continue, self.btn_exit]
+                    for obj in btn_list:
+                        obj.handle_event(event)
 
-            for event in self.get_event():
-                if self.is_press_escape_event(event):
-                    self._is_running = False
-
+                self.window.fill(self.BACKGROUND_COLOR)
                 for obj in btn_list:
-                    obj.handle_event(event)
+                    obj.draw(self.window)
 
-            self.window.fill(self.BACKGROUND_COLOR)
-            for obj in btn_list:
-                obj.draw(self.window)
-
-            self.update()
-            clock.tick(25)  # Make sure that the FPS is keeping to this value.
+                self.update()
+                clock.tick(25)  # Make sure that the FPS is keeping to this value.
