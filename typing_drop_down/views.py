@@ -2,7 +2,8 @@ __all__ = ('PyGameView', 'GameOverView')
 
 from typing import Tuple, Callable, List
 
-from .api import mixins
+from .api.mixins.font.name import FontNameListMixin
+from .api.mixins.font.model import FontModelMixin
 from .api.utils import cached_property, SafeMember
 from .api import generics
 from .controllers import PyGameKeyboard
@@ -11,28 +12,28 @@ import pygame
 from pygame.event import EventType
 
 
-class COLOR:
-    """
-    RGB
-    """
-    __slots__ = ()
-    BLACK = (0, 0, 0)
-    AZURE = (0, 127, 255)
-    WHITE = (255, 255, 255)
-    BLUE = (0, 0, 255)
-    GREEN = (0, 255, 0)
-    RED = (255, 0, 0)
-    PURPLE = (255, 0, 255)
-    YELLOW = (255, 255, 0)
+class COLOR(generics.RGBColor):
+    ...
 
 
 class PyGameView(
-    mixins.FontModelMixin,
+    FontNameListMixin,  # Do not use the proportional spacing font for typing use.
+    FontModelMixin,
     generics.GameView,
 ):
     __slots__ = generics.GameView.__slots__
     VIEW_CONTROLLER = pygame
-    FONT_NAME = 'ComicSansMs'
+    INFO_COLOR = COLOR.GREEN  # green  # points, CPM, WPM...
+
+    BACKGROUND_COLOR = (255, 200, 150)
+    FORE_COLOR = (0, 0, 0)
+
+    HEIGHT = 600
+    WIDTH = 1200
+
+    TYPING_CORRECT_COLOR = COLOR.GREEN
+    TYPING_CUR_POS_COLOR = COLOR.BLUE
+    TYPING_ERROR_COLOR = COLOR.RED
 
     def __init__(self, caption_name: str):
         pygame.init()
@@ -55,15 +56,13 @@ class PyGameView(
     def destroy_view(self):
         pygame.quit()
 
-    @cached_property
-    def font(self):
-        return pygame.font.SysFont(self.FONT_NAME, 32)
-
-    def draw_text(self, text: str, position: Tuple[int, int], font_color=None):
+    def draw_text(self, text: str, position: Tuple[int, int],
+                  font_name: FontNameListMixin, font_color=None, font_size=32, ):
         """
         position: (x, y)
         """
-        text = self.font.render(text, True, font_color)
+        font = pygame.font.SysFont(font_name, font_size)
+        text = font.render(text, True, font_color)
         self.window.blit(text, position)
 
 
@@ -134,9 +133,11 @@ class GameOverView(
         self._is_running = True
         btn_width, btn_height = 140, 50
         x = (self.WIDTH - btn_width) / 2
-        y = (self.HEIGHT - (2*btn_height)) / 5  # Divide into 5 equal parts that share 2 buttons.
-        self._btn_continue = PyGameButton('Restart', x, int(y*2), btn_width, btn_height, command=lambda: self.on_click_continue_btn(continue_fun))
-        self._btn_exit = PyGameButton('Exit', x, int(y*3), btn_width, btn_height, command=lambda: self.on_click_exit_btn(exit_fun))
+        y = (self.HEIGHT - (2 * btn_height)) / 5  # Divide into 5 equal parts that share 2 buttons.
+        self._btn_continue = PyGameButton('Restart', x, int(y * 2), btn_width, btn_height,
+                                          command=lambda: self.on_click_continue_btn(continue_fun))
+        self._btn_exit = PyGameButton('Exit', x, int(y * 3), btn_width, btn_height,
+                                      command=lambda: self.on_click_exit_btn(exit_fun))
         self._view = self._create_view()
         self._view.send(None)  # init
 

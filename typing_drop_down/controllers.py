@@ -31,7 +31,7 @@ class PyGameKeyboard(generics.KeyboardController):
 
     @staticmethod
     def get_press_key(event) -> str:
-        return event.unicode  # <- case-sensitive  # pygame.key.name(event.key)
+        return event.unicode if event.key != 32 else ' '  # <- case-sensitive  # pygame.key.name(event.key)
 
     @property
     def key_escape(self):
