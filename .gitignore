@@ -4,3 +4,5 @@ build/
 temp/
 *.pyc
 *egg-info
+
+typing_drop_down/words.txt
