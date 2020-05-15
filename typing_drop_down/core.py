@@ -13,18 +13,18 @@ import random
 from pathlib import Path
 
 from .api.utils import SafeMember
-from .views import PyGameView, GameOverView
+from .api.mixins.colors import TypingGameColorMixin
+from .views import PyGameView, GameOverView, HomeView
 from .controllers import PyGameKeyboard
 
 
 class TypingDropDown(
     PyGameKeyboard,
     PyGameView,
+    TypingGameColorMixin,
     SafeMember,
 ):
-    __slots__ = ('_word_set',
-                 '_game_over_view'
-                 ) + PyGameView.__slots__
+    __slots__ = ('_word_set',) + PyGameView.__slots__
 
     SPEED = 0.03
 
@@ -34,7 +34,6 @@ class TypingDropDown(
             self._word_set = f.read().splitlines()
         if len(self._word_set) == 0:
             raise RuntimeError(f'There is no content at the ``{words_file.absolute()}``')
-        self._game_over_view = GameOverView(caption_name='Game over', exit_fun=lambda: self.exit_app())
 
     def new_word(self):
         chosen_word = random.choice(self._word_set)
@@ -61,12 +60,13 @@ class TypingDropDown(
                 wpm = int(cpm/5)
                 total_chars = yield cpm, wpm
 
-    def create_game(self):
+    def start_game(self):
         fps = 60
         clock = pygame.time.Clock()
         total_chars, x_word, y_word, chosen_word, pressed_word = self.init_game()
         calculate_pm_info = self.generator_pm_info()
         cpm, wpm = calculate_pm_info.send(None)  # init
+        game_over_view = GameOverView(caption_name='Game over')  # cache view
         while 1:
             self.clear_canvas()
             y_word += self.SPEED*fps
@@ -82,6 +82,8 @@ class TypingDropDown(
                 if self.is_quit_event(event):
                     self.exit_app()
                 if self.is_key_down_event(event):
+                    if self.is_press_escape_event(event):
+                        return
                     pressed_key = self.get_press_key(event)
                     if chosen_word.startswith(pressed_word+pressed_key):
                         pressed_word += pressed_key
@@ -96,7 +98,9 @@ class TypingDropDown(
             clock.tick(fps)  # Make sure that the FPS is keeping to this value.
 
             if y_word > self.HEIGHT - 5:
-                self.game_over_view.show()
+                flag = game_over_view.show()
+                if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
+                    return  # back to the home page
                 total_chars, x_word, y_word, chosen_word, pressed_word = self.init_game()
                 cpm, wpm = calculate_pm_info.send(True)
 
@@ -106,6 +110,15 @@ class TypingDropDown(
         # if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:  # press space to restart
         return messagebox.askokcancel('Game over', 'try again?')
 
-    def exit_app(self):
-        self.destroy_view()
-        raise SystemExit
+
+class TypingGameApp(HomeView):
+    __slots__ = () + HomeView.__slots__
+    SPARK_IMAGE = Path(__file__).parent / Path('_static/home.jpg')
+
+    def __init__(self):
+        self.__is_running = True
+        super().__init__(caption_name='Welcome to the Typing World.',
+                         drop_down_process=lambda: TypingDropDown(Path('./words.txt')).start_game(),
+                         article_process=None,
+                         setting_process=None,
+                         )

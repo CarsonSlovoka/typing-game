@@ -81,6 +81,19 @@ class ShowTestDescription(TestCase):
         print(f"\t{document}") if document else None
 
 
+class WindowHelper:
+    __slots__ = ()
+
+    @staticmethod
+    def get_xy_for_move_to_center(screen_w, screen_h, img_w, img_h):
+        assert screen_w >= img_w, ValueError('screen_w < img_w')
+        assert screen_h >= img_h, ValueError('screen_h < img_h')
+
+        x = (screen_w - img_w) / 2
+        y = (screen_h - img_h) / 2
+        return x, y
+
+
 if sys.version_info[0] >= 3 and sys.version_info[1] >= 8:  # py.version >= 3.8
     from Lib.functools import cached_property
 else:
