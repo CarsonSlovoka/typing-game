@@ -27,6 +27,13 @@ Article
 
 ----
 
+.. toctree::
+    :caption: Hierarchy
+    :glob:
+    :maxdepth: 3
+
+    source/hierarchy/*
+
 
 History
 ==============
