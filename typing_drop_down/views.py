@@ -32,7 +32,7 @@ class PyGameView(
     FORE_COLOR = (0, 0, 0)
 
     HEIGHT = 600
-    WIDTH = 1200
+    WIDTH = 1600
 
     def __init__(self, caption_name: str):
         pygame.init()
