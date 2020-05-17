@@ -142,9 +142,9 @@ class TypingArticle(_TypingGameBase):
             y += y_gap
 
     @staticmethod
-    def generator_article(article_dir: Path) -> Generator[Union[str, str], int, int]:
+    def generator_article(article_dir: Path) -> Generator[Union[str, str, int], int, None]:
         """
-        :return: If the level does not exist then return the int, else return the content and file.name.
+        :return: Tuple(content, file.name, flag).  # The flag set to True means reset.
         """
 
         article_list = [_ for _ in article_dir.glob('*.txt')]
@@ -152,9 +152,9 @@ class TypingArticle(_TypingGameBase):
             raise FileExistsError(f'{article_dir.absolute()}')
         regex_rm_space_on_end = re.compile(r' +$', re.M)  # Remove redundant space on the line ends.
         while 1:
-            n_level = yield
+            n_level = yield '', '', True
             if n_level >= len(article_list):
-                return -1
+                break
             for cur_article_file in article_list[n_level:]:
                 with open(str(cur_article_file), newline=None) as f:
                     content = f.read()
@@ -162,30 +162,29 @@ class TypingArticle(_TypingGameBase):
                         raise RuntimeError(f'There is no content at the ``{cur_article_file.absolute()}``')
                     # yield re.sub(r' +$', "", content, flags=re.M)
                     content = re.sub(regex_rm_space_on_end, "", content)
-                    n_level = yield content, cur_article_file.name
+                    n_level = yield content, cur_article_file.name, False
                     if n_level is not None:
                         break
-            return -1
 
     def init_game(self, x, y, n_level=None):
+        """
+        :param x:
+        :param y:
+        :param n_level: Increase automatically by default.
+        """
         total_chars = 0
-        try:
-            article, title = next(self.article) if n_level else self.article.send(n_level)
-        except StopIteration as msg:
-            print(msg.value)
-            article = ""
-            title = "Game over"
+        article, title, reset_flag = next(self.article) if n_level is None else self.article.send(n_level)
         self.set_caption(title)
         pressed_word = ''
-        return total_chars, x, y, article, pressed_word
+        return reset_flag, total_chars, x, y, article, pressed_word
 
     def start_game(self, init_level: int):
         fps = 25
         clock = pygame.time.Clock()
         const_x_init = 50
         const_y_init = 150
-        level = init_level
-        total_chars, x_word, y_word, chosen_article, pressed_word = self.init_game(const_x_init, const_y_init, level)
+        total_chars, x_word, y_word, chosen_article, pressed_word = \
+            self.init_game(const_x_init, const_y_init, init_level)[1:]
         calculate_pm_info = self.generator_pm_info()
         cpm, wpm = next(calculate_pm_info)  # init
         game_over_view = GameOverView(caption_name='Game over')  # cache view
@@ -210,23 +209,30 @@ class TypingArticle(_TypingGameBase):
                     pressed_key = self.get_press_key(event)
                     if pressed_key == '\r':
                         pressed_key = '\n'
-                    if chosen_article.startswith(pressed_word+pressed_key):
+                    char_index = len(pressed_word+pressed_key) - 1
+                    # if chosen_article.startswith(pressed_word+pressed_key):
+                    if chosen_article[char_index] == pressed_key:
                         pressed_word += pressed_key
                         total_chars = len(pressed_word)
                         cpm, wpm = calculate_pm_info.send(total_chars)
                         if chosen_article == pressed_word:
-                            level += 1
-                            total_chars, x_word, y_word, chosen_article, pressed_word = \
-                                self.init_game(const_x_init, const_y_init, level)
-                            cpm, wpm = calculate_pm_info.send(True)
-                            if chosen_article == "":
+                            # next level
+                            init_flag, total_chars, x_word, y_word, chosen_article, pressed_word = \
+                                self.init_game(const_x_init, const_y_init)
+                            if init_flag:
                                 flag = game_over_view.show()
                                 if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
                                     return  # back to the home page
+
+                                # set level to the init_level
+                                total_chars, x_word, y_word, chosen_article, pressed_word = \
+                                    self.init_game(const_x_init, const_y_init, init_level)[1:]
+                            cpm, wpm = calculate_pm_info.send(True)
                     else:
                         if pressed_key != '\b':
                             if len(pressed_word + ' ') + 1 <= len(chosen_article):
-                                pressed_word = pressed_word + ' '
+                                pressed_word += ' '
+                                # pressed_word += chosen_article[char_index]
                         else:
                             pressed_word = pressed_word[: -1]
                             total_chars = len(pressed_word)
