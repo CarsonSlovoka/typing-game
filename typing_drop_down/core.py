@@ -3,6 +3,7 @@ __all__ = ('TypingDropDown',)
 import pygame
 
 from time import time
+from typing import Generator, Iterator
 
 from tkinter import *
 from tkinter import messagebox
@@ -37,7 +38,7 @@ class _TypingGameBase(
         raise NotImplementedError
 
     @abc.abstractmethod
-    def start_game(self):
+    def start_game(self, *args):
         ...
 
 
@@ -127,16 +128,12 @@ class TypingDropDown(_TypingGameBase):
 
 
 class TypingArticle(_TypingGameBase):
-    __slots__ = ('_txt_data',) + _TypingGameBase.__slots__
+    __slots__ = ('_article',) + _TypingGameBase.__slots__
 
-    def __init__(self, article_file: Path):
-        PyGameView.__init__(self, caption_name=f'Article: {article_file.name}')
-        open('article.txt', newline=None).read()
-        with open(str(article_file), newline=None) as f:
-            self._txt_data = re.sub(r' +$', "",  # Remove redundant space on the line ends.
-                                    f.read(), flags=re.M)
-        if len(self.txt_data) == 0:
-            raise RuntimeError(f'There is no content at the ``{article_file.absolute()}``')
+    def __init__(self, article_dir: Path):
+        PyGameView.__init__(self)
+        self._article: Generator = self.generator_article(article_dir)
+        self.article.send(None)  # init generator.
 
     def draw_article(self, article: str, x_init: int, y_init: int, font_color, y_gap=80):
         x, y = x_init, y_init
@@ -144,18 +141,51 @@ class TypingArticle(_TypingGameBase):
             self.draw_text(row_data, (x, y), self.FONT_NAME_CONSOLAS, font_color)
             y += y_gap
 
-    def init_game(self, x, y):
+    @staticmethod
+    def generator_article(article_dir: Path) -> Generator[Union[str, str], int, int]:
+        """
+        :return: If the level does not exist then return the int, else return the content and file.name.
+        """
+
+        article_list = [_ for _ in article_dir.glob('*.txt')]
+        if len(article_list) == 0:
+            raise FileExistsError(f'{article_dir.absolute()}')
+        regex_rm_space_on_end = re.compile(r' +$', re.M)  # Remove redundant space on the line ends.
+        while 1:
+            n_level = yield
+            if n_level >= len(article_list):
+                return -1
+            for cur_article_file in article_list[n_level:]:
+                with open(str(cur_article_file), newline=None) as f:
+                    content = f.read()
+                    if len(content) == 0:
+                        raise RuntimeError(f'There is no content at the ``{cur_article_file.absolute()}``')
+                    # yield re.sub(r' +$', "", content, flags=re.M)
+                    content = re.sub(regex_rm_space_on_end, "", content)
+                    n_level = yield content, cur_article_file.name
+                    if n_level is not None:
+                        break
+            return -1
+
+    def init_game(self, x, y, n_level=None):
         total_chars = 0
-        article = self.txt_data
+        try:
+            article, title = next(self.article) if n_level else self.article.send(n_level)
+        except StopIteration as msg:
+            print(msg.value)
+            article = ""
+            title = "Game over"
+        self.set_caption(title)
         pressed_word = ''
         return total_chars, x, y, article, pressed_word
 
-    def start_game(self):
+    def start_game(self, init_level: int):
         fps = 25
         clock = pygame.time.Clock()
         const_x_init = 50
         const_y_init = 150
-        total_chars, x_word, y_word, chosen_article, pressed_word = self.init_game(const_x_init, const_y_init)
+        level = init_level
+        total_chars, x_word, y_word, chosen_article, pressed_word = self.init_game(const_x_init, const_y_init, level)
         calculate_pm_info = self.generator_pm_info()
         cpm, wpm = next(calculate_pm_info)  # init
         game_over_view = GameOverView(caption_name='Game over')  # cache view
@@ -185,11 +215,14 @@ class TypingArticle(_TypingGameBase):
                         total_chars = len(pressed_word)
                         cpm, wpm = calculate_pm_info.send(total_chars)
                         if chosen_article == pressed_word:
-                            flag = game_over_view.show()
-                            if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
-                                return  # back to the home page
-                            total_chars, x_word, y_word, chosen_word, pressed_word = self.init_game(const_x_init, const_y_init)
+                            level += 1
+                            total_chars, x_word, y_word, chosen_article, pressed_word = \
+                                self.init_game(const_x_init, const_y_init, level)
                             cpm, wpm = calculate_pm_info.send(True)
+                            if chosen_article == "":
+                                flag = game_over_view.show()
+                                if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
+                                    return  # back to the home page
                     else:
                         if pressed_key != '\b':
                             if len(pressed_word + ' ') + 1 <= len(chosen_article):
@@ -210,6 +243,6 @@ class TypingGameApp(HomeView):
         self.__is_running = True
         super().__init__(caption_name='Welcome to the Typing World.',
                          drop_down_process=lambda: TypingDropDown(Path('./words.txt')).start_game(),
-                         article_process=lambda: TypingArticle(Path('./article.txt')).start_game(),
+                         article_process=lambda: TypingArticle(Path('./article/')).start_game(init_level=0),
                          setting_process=None,
                          )
