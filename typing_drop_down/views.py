@@ -34,10 +34,19 @@ class PyGameView(
     HEIGHT = 600
     WIDTH = 1600
 
-    def __init__(self, caption_name: str):
+    def __init__(self, caption_name: str = None):
         pygame.init()
-        pygame.display.set_caption(caption_name)
+        pygame.display.set_caption(caption_name) if caption_name else None
         generics.GameView.__init__(self, window=pygame.display.set_mode((self.WIDTH, self.HEIGHT)))
+
+    @staticmethod
+    def set_caption(caption_name: str):
+        pygame.display.set_caption(caption_name)
+
+    @staticmethod
+    def get_caption() -> str:
+        title, icon_title = pygame.display.get_caption()  # Returns the title and icontitle for the display Surface. These will often be the same value.
+        return title
 
     @cached_property
     def view_obj(self):
@@ -134,7 +143,7 @@ class GameOverView(
 
     def __init__(self, caption_name: str,
                  continue_fun: Callable = None, exit_fun: Callable = None):
-        PyGameView.__init__(self, caption_name)
+        PyGameView.__init__(self)
         self.__is_running = True
         btn_width, btn_height = 140, 50
         x = (self.WIDTH - btn_width) / 2
@@ -143,7 +152,7 @@ class GameOverView(
                                           command=lambda: self.on_click_continue_btn(continue_fun))
         self._btn_exit = PyGameButton('Exit', x, int(y * 3), btn_width, btn_height,
                                       command=lambda: self.on_click_exit_btn(exit_fun))
-        self._view = self._create_view()
+        self._view = self._create_view(caption_name)
         self._view.send(None)  # init
 
     def show(self):
@@ -168,31 +177,35 @@ class GameOverView(
             sub_process()
         return GameOverView.RTN_MSG_BACK_TO_HOME
 
-    def _create_view(self) -> Generator[None, None, Union[str, None]]:
+    def _create_view(self, caption_name='game over') -> Generator[None, None, Union[str, None]]:
         clock = pygame.time.Clock()
         dict_event = {self.key_enter: lambda: self.on_click_continue_btn(self.btn_continue.command),
                       self.key_escape: lambda: self.on_click_exit_btn(self.btn_exit.command)
                       }
         btn_list: List[PyGameButton] = [self.btn_continue, self.btn_exit]
+        org_caption = self.get_caption()
         while 1:
+            self.set_caption(org_caption)
             yield
+            self.set_caption(caption_name)
             while self.__is_running:
                 for event in self.get_event():
                     if self.is_quit_event(event):
                         self.exit_app()
-
                     # key
                     if self.is_key_down_event(event):
                         handle_event = dict_event.get(event.key)
                         if handle_event:
                             event_result = handle_event()
                             if event_result == GameOverView.RTN_MSG_BACK_TO_HOME:
+                                self.set_caption(org_caption)
                                 return GameOverView.RTN_MSG_BACK_TO_HOME
 
                     # click
                     for obj in btn_list:
                         event_result = obj.handle_event(event)
                         if event_result == GameOverView.RTN_MSG_BACK_TO_HOME:
+                            self.set_caption(org_caption)
                             return GameOverView.RTN_MSG_BACK_TO_HOME
 
                 self.window.fill(self.BACKGROUND_COLOR)
@@ -251,7 +264,7 @@ class HomeView(PyGameKeyboard, SwitchViewControl, HomeViewBase, SafeMember):
         self._btn_exit = PyGameButton('Exit', x, int(y * 8), btn_width, btn_height,
                                       command=lambda: self.on_click_btn(self.exit_app))
 
-        SwitchViewControl.__init__(self, fps=10)
+        SwitchViewControl.__init__(self, fps=10)  # call self._create_view
 
     def _create_view(self, fps: int):
         clock = pygame.time.Clock()
@@ -259,6 +272,7 @@ class HomeView(PyGameKeyboard, SwitchViewControl, HomeViewBase, SafeMember):
                                         self.btn_settings,
                                         self.btn_exit,
                                         ]
+        org_caption = self.get_caption()
         while 1:
             for event in self.get_event():
                 if self.is_press_escape_event(event) or self.is_quit_event(event):
@@ -266,6 +280,7 @@ class HomeView(PyGameKeyboard, SwitchViewControl, HomeViewBase, SafeMember):
 
                 for obj in btn_list:
                     obj.handle_event(event)
+                    self.set_caption(org_caption)
 
             self.window.fill(self.BACKGROUND_COLOR)
             self.draw_spark_image()
