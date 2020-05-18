@@ -71,7 +71,8 @@ class PyGameView(
         """
         font = pygame.font.SysFont(font_name, font_size)
         text = font.render(text, True, font_color)
-        self.window.blit(text, position)
+        rect = self.window.blit(text, position)
+        return rect.topright
 
     def exit_app(self):
         self.destroy_view()

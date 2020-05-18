@@ -19,7 +19,7 @@ from .api.mixins import  typings
 from .views import PyGameView, GameOverView, HomeView
 from .controllers import PyGameKeyboard
 import abc
-from typing import Tuple, Union
+from typing import Tuple, Union, List, Callable
 import re
 
 
@@ -166,25 +166,30 @@ class TypingArticle(_TypingGameBase):
                     if n_level is not None:
                         break
 
-    def init_game(self, x, y, n_level=None):
+    def init_game(self, n_level=None):
         """
-        :param x:
-        :param y:
         :param n_level: Increase automatically by default.
         """
         total_chars = 0
         article, title, reset_flag = next(self.article) if n_level is None else self.article.send(n_level)
+
+        # Draw a character one by one and pass the current position to the next function.
+        history_draw_list: List[Tuple[str,
+                                      Callable[[str, Tuple[int, int]], Tuple[int, int]]]] = \
+            [(char, lambda char, pos: self.draw_text(char, pos, self.FONT_NAME_CONSOLAS, self.FORE_COLOR)) for char in article]
+
         self.set_caption(title)
         pressed_word = ''
-        return reset_flag, total_chars, x, y, article, pressed_word
+        return reset_flag, history_draw_list, total_chars, article, pressed_word
 
     def start_game(self, init_level: int):
         fps = 25
         clock = pygame.time.Clock()
         const_x_init = 50
         const_y_init = 150
-        total_chars, x_word, y_word, chosen_article, pressed_word = \
-            self.init_game(const_x_init, const_y_init, init_level)[1:]
+        const_y_gap = 80
+        cur_pos = (const_x_init, const_y_init)
+        _, history_draw_list, total_chars, chosen_article, pressed_word = self.init_game(init_level)
         calculate_pm_info = self.generator_pm_info()
         cpm, wpm = next(calculate_pm_info)  # init
         game_over_view = GameOverView(caption_name='Game over')  # cache view
@@ -193,12 +198,14 @@ class TypingArticle(_TypingGameBase):
             self.draw_text(f'total chars:{total_chars}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
             self.draw_text(f'CPM:{cpm}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
             self.draw_text(f'WPM:{wpm}', (10, 85), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
-            self.draw_article(chosen_article, const_x_init, const_y_init, font_color=self.FORE_COLOR)
-            self.draw_article(pressed_word, const_x_init, const_y_init, font_color=self.TYPING_CORRECT_COLOR)
-
+            for cur_char, cur_draw in history_draw_list:
+                if cur_char == '\n':
+                    cur_char = ''
+                    cur_pos = (const_x_init, cur_pos[1]+const_y_gap)
+                cur_pos = cur_draw(cur_char, cur_pos)
+            cur_pos = (const_x_init, const_y_init)
             underline = re.sub(r'[^\n]', " ", pressed_word) + "_"  # Any characters except not space.
             self.draw_article(underline, const_x_init, const_y_init+10, font_color=self.TYPING_CUR_POS_COLOR)
-
             self.view_update()
             for event in self.get_event():
                 if self.is_quit_event(event):
@@ -207,36 +214,40 @@ class TypingArticle(_TypingGameBase):
                     if self.is_press_escape_event(event):
                         return
                     pressed_key = self.get_press_key(event)
+                    char_index = max(len(pressed_word + pressed_key) - 1, 0)
                     if pressed_key == '\r':
                         pressed_key = '\n'
-                    char_index = len(pressed_word+pressed_key) - 1
-                    # if chosen_article.startswith(pressed_word+pressed_key):
+
+                    # typing correct
                     if chosen_article[char_index] == pressed_key:
                         pressed_word += pressed_key
+                        history_draw_list[char_index] = (pressed_key, lambda char, pos: self.draw_text(char, pos, self.FONT_NAME_CONSOLAS, self.TYPING_CORRECT_COLOR))
                         total_chars = len(pressed_word)
                         cpm, wpm = calculate_pm_info.send(total_chars)
-                        if chosen_article == pressed_word:
-                            # next level
-                            init_flag, total_chars, x_word, y_word, chosen_article, pressed_word = \
-                                self.init_game(const_x_init, const_y_init)
-                            if init_flag:
-                                flag = game_over_view.show()
-                                if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
-                                    return  # back to the home page
-
-                                # set level to the init_level
-                                total_chars, x_word, y_word, chosen_article, pressed_word = \
-                                    self.init_game(const_x_init, const_y_init, init_level)[1:]
-                            cpm, wpm = calculate_pm_info.send(True)
-                    else:
+                    else:  # typing wrong
                         if pressed_key != '\b':
-                            if len(pressed_word + ' ') + 1 <= len(chosen_article):
-                                pressed_word += ' '
-                                # pressed_word += chosen_article[char_index]
+                            if len(pressed_word + ' ') <= len(chosen_article):
+                                history_draw_list[char_index] = (chosen_article[char_index], lambda char, pos: self.draw_text(char, pos, self.FONT_NAME_CONSOLAS, self.TYPING_ERROR_COLOR))
+                                # pressed_word += ' '
+                                pressed_word += chosen_article[char_index]
                         else:
+                            pre_index = max(char_index - 1, 0)
+                            history_draw_list[pre_index] = (chosen_article[pre_index], lambda char, pos: self.draw_text(char, pos, self.FONT_NAME_CONSOLAS, self.FORE_COLOR))
                             pressed_word = pressed_word[: -1]
                             total_chars = len(pressed_word)
                         cpm, wpm = calculate_pm_info.send(total_chars)
+
+                    if chosen_article == pressed_word:
+                        # next level
+                        reset_flag, history_draw_list, total_chars, chosen_article, pressed_word = self.init_game()
+                        if reset_flag:
+                            flag = game_over_view.show()
+                            if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
+                                return  # back to the home page
+
+                            # set level to the init_level
+                            _, history_draw_list, total_chars, chosen_article, pressed_word = self.init_game(init_level)
+                        cpm, wpm = calculate_pm_info.send(True)
 
             clock.tick(fps)  # Make sure that the FPS is keeping to this value.
 
