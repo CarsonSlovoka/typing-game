@@ -2,8 +2,7 @@ __all__ = ('TypingDropDown',)
 
 import pygame
 
-from time import time
-from typing import Generator, Iterator
+from typing import Generator
 
 from tkinter import *
 from tkinter import messagebox
@@ -15,7 +14,7 @@ from pathlib import Path
 
 from .api.utils import SafeMember
 from .api.mixins.colors import TypingGameColorMixin
-from .api.mixins import  typings
+from .api.mixins import typings
 from .views import PyGameView, GameOverView, HomeView
 from .controllers import PyGameKeyboard
 import abc
@@ -40,6 +39,11 @@ class _TypingGameBase(
     @abc.abstractmethod
     def start_game(self, *args):
         ...
+
+    def draw_panel(self, total_chars: int, cpm: int, wpm: int):
+        self.draw_text(f'total chars:{total_chars}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+        self.draw_text(f'CPM:{cpm}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+        self.draw_text(f'WPM:{wpm}', (10, 85), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
 
 
 class TypingDropDown(_TypingGameBase):
@@ -82,9 +86,7 @@ class TypingDropDown(_TypingGameBase):
             self.draw_text(chosen_word, (x_word, y_word), font_name=self.FONT_NAME_CONSOLAS, font_color=self.FORE_COLOR)
             self.draw_text(f'{pressed_word}', (x_word, y_word), self.FONT_NAME_CONSOLAS, self.TYPING_CORRECT_COLOR)
             self.draw_text(f'{" " * len(pressed_word) + "_" }', (x_word, y_word+10), self.FONT_NAME_CONSOLAS, self.TYPING_CUR_POS_COLOR)
-            self.draw_text(f'total chars:{cur_total_chars}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
-            self.draw_text(f'CPM:{cpm}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
-            self.draw_text(f'WPM:{wpm}', (10, 85), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+            self.draw_panel(cur_total_chars, cpm, wpm)
             # self.draw_text(f'{pressed_word}', (10, 165), font_color=self.INFO_COLOR)
             self.view_update()
             for event in self.get_event():
@@ -195,9 +197,7 @@ class TypingArticle(_TypingGameBase):
         game_over_view = GameOverView(caption_name='Game over')  # cache view
         while 1:
             self.clear_canvas()
-            self.draw_text(f'total chars:{total_chars}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
-            self.draw_text(f'CPM:{cpm}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
-            self.draw_text(f'WPM:{wpm}', (10, 85), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+            self.draw_panel(total_chars, cpm, wpm)
             for cur_char, cur_draw in history_draw_list:
                 if cur_char == '\n':
                     cur_char = ''

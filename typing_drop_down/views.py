@@ -1,4 +1,4 @@
-__all__ = ('PyGameView', 'GameOverView')
+__all__ = ('PyGameView', 'GameOverView', 'HomeView')
 
 from abc import ABC
 from typing import Tuple, Callable, List, Generator, Union
