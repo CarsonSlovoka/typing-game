@@ -5,10 +5,13 @@ if 'sys path setting':
     import sys
     import os
     if 'source code path':
-        django_project_path = Path(__file__).parent.parent / Path('typing_drop_down')
-        sys.path.insert(0, str(django_project_path))  # use for ``.. automodule``
+        code_dir = Path(__file__).parent.parent / Path('typing_drop_down')
+        sys.path.insert(0, str(code_dir))  # use for ``.. automodule``
     sys.path.append(str(Path(__file__).parent))  # _static/uml/...
     plantuml = f'java -jar {Path(os.environ["USERPROFILE"]) / Path("plantuml.jar")}'
+
+    sys.path.append(str(Path(__file__).parent.parent))  # _static/uml/...
+    from typing_drop_down import __version__
 
 master_file = Path(__file__).parent / Path('doc.rst')
 source_dir = Path(__file__).parent
@@ -16,8 +19,8 @@ output_path = None  # default Path(master_file).parent.parent / temp / language
 
 master_doc = master_file.stem
 project = 'Typing Game'  # project_name
-release = '0.0.0'  # full_version
-version = '0.0'  # short_version
+release = __version__  # full_version: x.x.x
+version = __version__[:__version__.rfind('.')]  # short_version: x.x
 copyright = 'Copyright (c) 2020 Carson'
 author = 'Carson Tseng'
 language = 'en'  # 'zh_TW' # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-language
