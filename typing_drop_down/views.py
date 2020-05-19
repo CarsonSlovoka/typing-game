@@ -37,7 +37,7 @@ class PyGameView(
     def __init__(self, caption_name: str = None):
         pygame.init()
         pygame.display.set_caption(caption_name) if caption_name else None
-        generics.GameView.__init__(self, window=pygame.display.set_mode((self.WIDTH, self.HEIGHT)))
+        generics.GameView.__init__(self, window=pygame.display.set_mode((self.WIDTH, self.HEIGHT)))  # ,pygame.FULLSCREEN
 
     @staticmethod
     def set_caption(caption_name: str):
@@ -65,11 +65,12 @@ class PyGameView(
         pygame.quit()
 
     def draw_text(self, text: str, position: Tuple[int, int],
-                  font_name: FontNameListMixin, font_color=None, font_size=32, ):
+                  font_name: FontNameListMixin, font_color=None, font_size=32, font=None):
         """
         position: (x, y)
         """
-        font = pygame.font.SysFont(font_name, font_size)
+        if font is None:
+            font = pygame.font.SysFont(font_name, font_size)
         text = font.render(text, True, font_color)
         rect = self.window.blit(text, position)
         return rect.topright
