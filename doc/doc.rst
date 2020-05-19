@@ -1,5 +1,7 @@
+.. . :numbered:
+
 ====================================================
-Tutorial: django-rest-framework
+Typing-Game: Documentation
 ====================================================
 
 .. contents:: Table of Contents
@@ -7,23 +9,24 @@ Tutorial: django-rest-framework
 Article
 ============
 
-.. toctree::
-    :caption: Tutorial
-    :glob:
-    :numbered:
-    :maxdepth: 3
-
-    source/tutorial/lesson_0.rst
-    source/tutorial/*
-
-----
+Game
+------------
 
 .. toctree::
-    :caption: Sphinx
+    :caption: typing dropdown
     :glob:
     :maxdepth: 3
 
-    source/sphinx/*
+    source/game/typing_dropdown/dropdown.index.rst
+
+
+
+.. toctree::
+    :caption: typing article
+    :glob:
+    :maxdepth: 3
+
+    source/game/typing_article/article.index.rst
 
 ----
 
