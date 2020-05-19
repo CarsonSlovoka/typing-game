@@ -30,6 +30,10 @@ class UML
                     FontNameListMixin --|> FontMonoSpacingMixin
                 }
             }
+
+            package typing {
+                class StatisticianMixin
+            }
         }
 
         package generics {
