@@ -1,15 +1,18 @@
-__all__ = ('PyGameView', 'GameOverView')
+__all__ = ('PyGameView', 'GameOverView', 'HomeView')
 
-from typing import Tuple, Callable, List
+from abc import ABC
+from typing import Tuple, Callable, List, Generator, Union
 
 from .api.mixins.font.name import FontNameListMixin
 from .api.mixins.font.model import FontModelMixin
-from .api.utils import cached_property, SafeMember
+from .api.utils import cached_property, SafeMember, WindowHelper, ABCSafeMember
 from .api import generics
-from .controllers import PyGameKeyboard
+from .controllers import PyGameKeyboard, SwitchViewControl
 
 import pygame
+from pygame import Surface
 from pygame.event import EventType
+from pathlib import Path
 
 
 class COLOR(generics.RGBColor):
@@ -29,16 +32,21 @@ class PyGameView(
     FORE_COLOR = (0, 0, 0)
 
     HEIGHT = 600
-    WIDTH = 1200
+    WIDTH = 1600
 
-    TYPING_CORRECT_COLOR = COLOR.GREEN
-    TYPING_CUR_POS_COLOR = COLOR.BLUE
-    TYPING_ERROR_COLOR = COLOR.RED
-
-    def __init__(self, caption_name: str):
+    def __init__(self, caption_name: str = None):
         pygame.init()
+        pygame.display.set_caption(caption_name) if caption_name else None
+        generics.GameView.__init__(self, window=pygame.display.set_mode((self.WIDTH, self.HEIGHT)))  # ,pygame.FULLSCREEN
+
+    @staticmethod
+    def set_caption(caption_name: str):
         pygame.display.set_caption(caption_name)
-        generics.GameView.__init__(self, window=pygame.display.set_mode((self.WIDTH, self.HEIGHT)))
+
+    @staticmethod
+    def get_caption() -> str:
+        title, icon_title = pygame.display.get_caption()  # Returns the title and icontitle for the display Surface. These will often be the same value.
+        return title
 
     @cached_property
     def view_obj(self):
@@ -57,13 +65,19 @@ class PyGameView(
         pygame.quit()
 
     def draw_text(self, text: str, position: Tuple[int, int],
-                  font_name: FontNameListMixin, font_color=None, font_size=32, ):
+                  font_name: FontNameListMixin, font_color=None, font_size=32, font=None):
         """
         position: (x, y)
         """
-        font = pygame.font.SysFont(font_name, font_size)
+        if font is None:
+            font = pygame.font.SysFont(font_name, font_size)
         text = font.render(text, True, font_color)
-        self.window.blit(text, position)
+        rect = self.window.blit(text, position)
+        return rect.topright
+
+    def exit_app(self):
+        self.destroy_view()
+        raise SystemExit
 
 
 class PyGameButton(SafeMember):
@@ -115,7 +129,7 @@ class PyGameButton(SafeMember):
             self._is_hovered = self.image_rect.collidepoint(event.pos)
             return
         if event.type == pygame.MOUSEBUTTONDOWN and self._is_hovered and self.command:
-            self.command()
+            return self.command()
 
 
 class GameOverView(
@@ -124,13 +138,15 @@ class GameOverView(
     SafeMember,
 ):
     __slots__ = ('_view',
-                 '_is_running',
+                 '__is_running',
                  '_btn_continue', '_btn_exit') + PyGameView.__slots__
+
+    RTN_MSG_BACK_TO_HOME = 'back to home'
 
     def __init__(self, caption_name: str,
                  continue_fun: Callable = None, exit_fun: Callable = None):
-        PyGameView.__init__(self, caption_name)
-        self._is_running = True
+        PyGameView.__init__(self)
+        self.__is_running = True
         btn_width, btn_height = 140, 50
         x = (self.WIDTH - btn_width) / 2
         y = (self.HEIGHT - (2 * btn_height)) / 5  # Divide into 5 equal parts that share 2 buttons.
@@ -138,44 +154,61 @@ class GameOverView(
                                           command=lambda: self.on_click_continue_btn(continue_fun))
         self._btn_exit = PyGameButton('Exit', x, int(y * 3), btn_width, btn_height,
                                       command=lambda: self.on_click_exit_btn(exit_fun))
-        self._view = self._create_view()
+        self._view = self._create_view(caption_name)
         self._view.send(None)  # init
 
     def show(self):
-        self._is_running = True
-        self.view.send(None)
+        self.__is_running = True
+        try:
+            self.view.send(None)
+        except StopIteration as response:
+            return response.value
 
     def hide(self):
-        self._is_running = False
+        self.__is_running = False
         self.view.send(None)
 
     def on_click_continue_btn(self, sub_process: Callable = None):
-        self._is_running = False
+        self.__is_running = False
         if sub_process:
             sub_process()
 
     def on_click_exit_btn(self, sub_process: Callable = None):
-        self._is_running = False
+        self.__is_running = False
         if sub_process:
             sub_process()
+        return GameOverView.RTN_MSG_BACK_TO_HOME
 
-    def _create_view(self):
+    def _create_view(self, caption_name='game over') -> Generator[None, None, Union[str, None]]:
         clock = pygame.time.Clock()
-        dict_action = {self.key_enter: lambda: self.on_click_continue_btn(self.btn_continue.command),
-                       self.key_escape: lambda: self.on_click_exit_btn(self.btn_exit.command)}
+        dict_event = {self.key_enter: lambda: self.on_click_continue_btn(self.btn_continue.command),
+                      self.key_escape: lambda: self.on_click_exit_btn(self.btn_exit.command)
+                      }
+        btn_list: List[PyGameButton] = [self.btn_continue, self.btn_exit]
+        org_caption = self.get_caption()
         while 1:
+            self.set_caption(org_caption)
             yield
-            while self.is_running:
-                btn_list: List[PyGameButton] = [self.btn_continue, self.btn_exit]
-
+            self.set_caption(caption_name)
+            while self.__is_running:
                 for event in self.get_event():
+                    if self.is_quit_event(event):
+                        self.exit_app()
+                    # key
                     if self.is_key_down_event(event):
-                        fun = dict_action.get(event.key)
-                        if fun:
-                            fun()
+                        handle_event = dict_event.get(event.key)
+                        if handle_event:
+                            event_result = handle_event()
+                            if event_result == GameOverView.RTN_MSG_BACK_TO_HOME:
+                                self.set_caption(org_caption)
+                                return GameOverView.RTN_MSG_BACK_TO_HOME
 
+                    # click
                     for obj in btn_list:
-                        obj.handle_event(event)
+                        event_result = obj.handle_event(event)
+                        if event_result == GameOverView.RTN_MSG_BACK_TO_HOME:
+                            self.set_caption(org_caption)
+                            return GameOverView.RTN_MSG_BACK_TO_HOME
 
                 self.window.fill(self.BACKGROUND_COLOR)
                 for obj in btn_list:
@@ -183,3 +216,83 @@ class GameOverView(
 
                 self.update()
                 clock.tick(25)  # Make sure that the FPS is keeping to this value.
+
+
+class HomeViewBase(PyGameView):
+    """ create spark image"""
+
+    __slots__ = ('_spark_image',) + PyGameView.__slots__
+
+    SPARK_IMAGE: Path = None
+
+    def __init__(self, caption_name: str):
+        PyGameView.__init__(self, caption_name)
+        assert self.SPARK_IMAGE is not None, NotImplementedError('SPARK_IMAGE is not set')
+        spark_image: Surface = pygame.image.load(str(self.SPARK_IMAGE))
+        self._spark_image = pygame.transform.scale(spark_image, (self.WIDTH, self.HEIGHT))
+
+    def draw_spark_image(self):
+        img_w, img_h = self.spark_image.get_size()
+        center_x, center_y = WindowHelper.get_xy_for_move_to_center(self.WIDTH, self.HEIGHT, img_w, img_h)
+        self.window.blit(self.spark_image, (center_x, center_y))
+
+
+class HomeView(PyGameKeyboard, SwitchViewControl, HomeViewBase, SafeMember):
+    __slots__ = ('_btn_drop_down', '_btn_article', '_btn_settings', '_btn_exit') + \
+                SwitchViewControl.__other_slots__ + HomeViewBase.__slots__
+
+    def __init__(self, caption_name='Index',
+                 drop_down_process: Callable = None,
+                 article_process: Callable = None,
+                 setting_process: Callable = None,
+                 exit_fun: Callable = None,
+                 ):
+        HomeViewBase.__init__(self, caption_name)
+        self.__is_running = True
+
+        btn_width, btn_height = 180, 66
+        x = (self.WIDTH - btn_width) / 2
+        y = (self.HEIGHT - (4 * btn_height)) / 8  # Divide into 8 equal parts that share 4 buttons.
+
+        self._btn_drop_down = PyGameButton('Drop Down', x, int(y * 2), btn_width, btn_height,
+                                           command=lambda: self.on_click_btn(drop_down_process))
+
+        self._btn_article = PyGameButton('Article', x, int(y * 4), btn_width, btn_height,
+                                         command=lambda: self.on_click_btn(article_process))
+
+        self._btn_settings = PyGameButton('Settings', x, int(y * 6), btn_width, btn_height,
+                                          command=lambda: self.on_click_btn(setting_process))
+
+        self._btn_exit = PyGameButton('Exit', x, int(y * 8), btn_width, btn_height,
+                                      command=lambda: self.on_click_btn(self.exit_app))
+
+        SwitchViewControl.__init__(self, fps=10)  # call self._create_view
+
+    def _create_view(self, fps: int):
+        clock = pygame.time.Clock()
+        btn_list: List[PyGameButton] = [self.btn_drop_down, self.btn_article,  # <-- game
+                                        self.btn_settings,
+                                        self.btn_exit,
+                                        ]
+        org_caption = self.get_caption()
+        while 1:
+            for event in self.get_event():
+                if self.is_press_escape_event(event) or self.is_quit_event(event):
+                    self.exit_app()
+
+                for obj in btn_list:
+                    obj.handle_event(event)
+                    self.set_caption(org_caption)
+
+            self.window.fill(self.BACKGROUND_COLOR)
+            self.draw_spark_image()
+            for obj in btn_list:
+                obj.draw(self.window)
+
+            self.update()
+            clock.tick(fps)
+
+    @staticmethod
+    def on_click_btn(sub_process: Callable = None):
+        if sub_process:
+            sub_process()
