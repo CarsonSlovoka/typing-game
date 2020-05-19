@@ -294,7 +294,9 @@ class TypingArticle(_TypingGameBase):
                                 underline_index += 1
                         else:
                             pre_index = max(underline_index - 1, 0)
-                            history_draw_list[pre_index] = (chosen_article[pre_index], pos_list[pre_index], True, self.FORE_COLOR,
+                            pre_color = history_draw_list[pre_index][3]
+                            is_modify_flag = True if pre_color != self.TYPING_CORRECT_COLOR else False  # Only with typing wrong can set the True, so the original typing correct that doesn't affect.
+                            history_draw_list[pre_index] = (chosen_article[pre_index], pos_list[pre_index], is_modify_flag, self.FORE_COLOR,
                                                             lambda char, _pos, color: self.draw_text(char, _pos, self.FONT_NAME_CONSOLAS, color))
                             pressed_word = pressed_word[: -1]
                             underline_index = max(underline_index - 1, 0)
