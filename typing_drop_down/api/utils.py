@@ -1,12 +1,14 @@
 __all__ = (
     'SafeMember', 'ABCSafeMember',
     'ShowTestDescription',
-    'cached_property'
+    'cached_property', 'after_end',
 )
 
 from unittest import TestCase
-import sys
 import abc
+from contextlib import contextmanager
+from typing import Callable
+import sys
 
 
 class MetaMemberControl(type):
@@ -98,3 +100,18 @@ if sys.version_info[0] >= 3 and sys.version_info[1] >= 8:  # py.version >= 3.8
     from Lib.functools import cached_property
 else:
     cached_property = property
+
+
+@contextmanager
+def after_end(cb_fun: Callable):
+    """
+    with after_end(cb_fun) as cb_fun:
+        ...
+
+    with after_end(cb_fun=lambda: shutil.rmtree(temp_dir)) as _:  # make sure the temp_dir will remove after finished.
+        ...
+    """
+    try:
+        yield cb_fun
+    finally:
+        cb_fun()

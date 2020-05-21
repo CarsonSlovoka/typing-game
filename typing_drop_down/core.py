@@ -1,4 +1,4 @@
-__all__ = ('TypingDropDown',)
+__all__ = ('TypingGameApp', 'TypingDropDown', )
 
 import pygame
 
@@ -13,15 +13,17 @@ if 'tk withdraw':
 import random
 from pathlib import Path
 
-from .api.utils import SafeMember
+from .api.utils import SafeMember, after_end
 from .api.mixins.colors import TypingGameColorMixin
 from .api.mixins import typings
 from .api.generics import RGBColor
 from .views import PyGameView, GameOverView, HomeView
 from .controllers import PyGameKeyboard
+from . import config
 import abc
 from typing import Tuple, Union, List, Callable
 import re
+import types
 
 
 class _TypingGameBase(
@@ -73,7 +75,7 @@ class TypingDropDown(_TypingGameBase):
         pressed_word = ''
         return total_chars, x, y, chosen_word, pressed_word
 
-    def start_game(self):
+    def start_game(self, parent=None):
         fps = 60
         clock = pygame.time.Clock()
         total_chars, x_word, y_word, chosen_word, pressed_word = self.init_game()
@@ -96,6 +98,7 @@ class TypingDropDown(_TypingGameBase):
                     self.exit_app()
                 if self.is_key_down_event(event):
                     if self.is_press_escape_event(event):
+                        self.destroy_view() if parent is None else None
                         return
                     pressed_key = self.get_press_key(event)
                     if chosen_word.startswith(pressed_word + pressed_key):
@@ -146,10 +149,12 @@ class TypingArticle(_TypingGameBase):
             y += y_gap
 
     @staticmethod
-    def generator_article(article_dir: Path) -> Generator[Union[str, str, int], int, None]:
+    def generator_article(article_dir: Union[Path, str]) -> Generator[Union[str, str, int], int, None]:
         """
         :return: Tuple(content, file.name, flag).  # The flag set to True means reset.
         """
+        if isinstance(article_dir, str):
+            article_dir = Path(article_dir)
 
         article_list = [_ for _ in article_dir.glob('*.txt')]
         if len(article_list) == 0:
@@ -310,10 +315,15 @@ class TypingGameApp(HomeView):
     __slots__ = () + HomeView.__slots__
     SPARK_IMAGE = Path(__file__).parent / Path('_static/home.jpg')
 
-    def __init__(self):
+    def __init__(self, conf: config):
+        if not isinstance(conf, types.ModuleType):
+            raise TypeError("conf doesn't belong to types.ModuleType")
         self.__is_running = True
         super().__init__(caption_name='Welcome to the Typing World.',
-                         drop_down_process=lambda: TypingDropDown(Path('./words.txt')).start_game(),
-                         article_process=lambda: TypingArticle(Path('./article/')).start_game(init_level=0),
+                         drop_down_process=lambda: TypingDropDown(conf.DROPDOWN_TXT).start_game(parent=self),
+                         article_process=lambda: TypingArticle(conf.ARTICLE_DIR).start_game(init_level=0),
                          setting_process=None,
                          )
+
+    def start(self):
+        return super().show()

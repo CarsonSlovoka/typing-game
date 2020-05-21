@@ -13,6 +13,7 @@ import pygame
 from pygame import Surface
 from pygame.event import EventType
 from pathlib import Path
+import sys
 
 
 class COLOR(generics.RGBColor):
@@ -77,7 +78,7 @@ class PyGameView(
 
     def exit_app(self):
         self.destroy_view()
-        raise SystemExit
+        raise SystemExit(1)
 
 
 class PyGameButton(SafeMember):
