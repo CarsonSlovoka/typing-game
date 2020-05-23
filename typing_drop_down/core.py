@@ -149,22 +149,30 @@ class TypingArticle(_TypingGameBase):
             y += y_gap
 
     @staticmethod
-    def generator_article(article_dir: Union[Path, str]) -> Generator[Union[str, str, int], int, None]:
+    def generator_article(article_dir: Union[Path, str]) -> Generator[Union[str, int], int, None]:
         """
         :return: Tuple(content, file.name, flag).  # The flag set to True means reset.
         """
         if isinstance(article_dir, str):
             article_dir = Path(article_dir)
 
-        article_list = [_ for _ in article_dir.glob('*.txt')]
+        article_list = [_ for _ in article_dir.glob('*.*')]
+        regex = re.compile("^[0-9]+.")
+        level_info_list = [(regex.search(file_path.name).group().replace('.', ''), file_path) for file_path in article_list]
+        article_list = [(n_level, file_path) for n_level, file_path in sorted(level_info_list, key=lambda e: int(e[0]))]
+
         if len(article_list) == 0:
             raise FileExistsError(f'{article_dir.absolute()}')
         regex_rm_space_on_end = re.compile(r' +$', re.M)  # Remove redundant space on the line ends.
         while 1:
             n_level = yield '', '', True
-            if n_level >= len(article_list):
+            if n_level not in [int(level) for level, _ in article_list] + [0]:
                 break
-            for cur_article_file in article_list[n_level:]:
+            for idx, (_level, file_path) in enumerate(article_list):
+                if n_level == int(_level):
+                    n_level = idx
+                    break
+            for _level, cur_article_file in article_list[n_level:]:
                 with open(str(cur_article_file), newline=None) as f:
                     content = f.read()
                     if len(content) == 0:
@@ -270,7 +278,7 @@ class TypingArticle(_TypingGameBase):
                                 return  # back to the home page
 
                             # set level to the init_level
-                            _, history_draw_list, underline_index, total_chars, pos_list, chosen_article, pressed_word = self.init_game((const_x_init, const_y_init), const_y_gap, init_level)
+                            _, history_draw_list, underline_index, total_chars, pos_list, chosen_article, pressed_word = self.init_game((const_x_init, const_y_init), const_y_gap, n_level=0)
                         cpm, wpm = calculate_pm_info.send(True)
                         break
 
@@ -311,8 +319,8 @@ class TypingArticle(_TypingGameBase):
             clock.tick(fps)  # Make sure that the FPS is keeping to this value.
 
 
-class TypingGameApp(HomeView):
-    __slots__ = () + HomeView.__slots__
+class TypingGameApp(HomeView, SafeMember):
+    __slots__ = ('_config', ) + HomeView.__slots__
     SPARK_IMAGE = Path(__file__).parent / Path('_static/home.jpg')
 
     def __init__(self, conf: config):
@@ -321,8 +329,9 @@ class TypingGameApp(HomeView):
         self.__is_running = True
         super().__init__(caption_name='Welcome to the Typing World.',
                          drop_down_process=lambda: TypingDropDown(conf.DROPDOWN_TXT).start_game(parent=self),
-                         article_process=lambda: SelectLevelView(play_process=lambda n_stage: TypingArticle(conf.ARTICLE_DIR).start_game(init_level=n_stage)
-                                                                 ).show(),  # call _create_view
+                         article_process=lambda: SelectLevelView(config=conf,
+                                                                 play_process=lambda n_stage: TypingArticle(conf.ARTICLE_DIR).start_game(init_level=n_stage)
+                                                                 ).run(fps=15),  # call _create_view
                          setting_process=None,
                          )
 

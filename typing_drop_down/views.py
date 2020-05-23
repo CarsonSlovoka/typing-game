@@ -2,6 +2,7 @@ __all__ = ('PyGameView', 'GameOverView', 'HomeView', 'SelectLevelView')
 
 from abc import ABC
 from typing import Tuple, Callable, List, Generator, Union
+import types
 
 from .api.mixins.font.name import FontNameListMixin
 from .api.mixins.font.model import FontModelMixin
@@ -17,6 +18,9 @@ import pygame_menu
 
 from pathlib import Path
 import sys
+import abc
+import re
+from time import sleep
 
 
 class COLOR(generics.RGBColor):
@@ -304,79 +308,83 @@ class HomeView(PyGameKeyboard, SwitchViewControl, HomeViewBase, SafeMember):
             sub_process()
 
 
-class SelectLevelView(PyGameKeyboard, SwitchViewControl, PyGameView, SafeMember):
+class _SelectLevelViewBase(PyGameKeyboard, PyGameView, ABCSafeMember):
+    """
+    To use this class, you are only implementing the method ``_build_level_menu`` and it enough.
+    """
 
-    __slots__ = ('_main_menu', '_cur_stage') + SwitchViewControl.__other_slots__ + HomeViewBase.__slots__
+    __slots__ = ('_menu_level', '_is_running') + PyGameView.__slots__
+
+    TITLE = 'Select the Level'
+
+    def __init__(self, *args, **kwargs):
+        PyGameView.__init__(self)
+
+        self._is_running = True
+        self._menu_level: pygame_menu.Menu = self._build_level_menu(*args, **kwargs)
+
+    @abc.abstractmethod
+    def _build_level_menu(self, *args, **kwargs) -> pygame_menu.Menu:
+        ...
+
+    def exit_app(self):
+        self._is_running = False
+
+    def run(self, fps: int):
+        clock = pygame.time.Clock()
+        org_caption = self.get_caption()
+        self.set_caption(self.TITLE)
+        sleep(0.25)
+        while self._is_running:
+            for event in self.get_event():
+                if self.is_quit_event(event):
+                    self.exit_app()
+
+                if self.is_press_escape_event(event):
+                    self.set_caption(org_caption)
+                    return
+
+                # self._menu_level.mainloop(self.window, self.main_background, disable_loop=False, fps_limit=fps)
+                self._menu_level.draw(surface=self.window, clear_surface=True)
+                self._menu_level.update([event])
+
+            self.update()
+            clock.tick(fps)
+
+
+class SelectLevelView(_SelectLevelViewBase, SafeMember):
+    __slots__ = ('_config',) + PyGameView.__slots__
 
     TITLE = 'Select the Stage'
 
-    def __init__(self, play_process: Callable):
-        PyGameView.__init__(self)
-        self.__is_running = True
+    def __init__(self, config: types.ModuleType, play_process: Callable):
+        assert hasattr(config, 'ARTICLE_DIR'), AttributeError('config missing ARTICLE_DIR')
+        self._config = config
+        _SelectLevelViewBase.__init__(self, play_process)
 
-        self._cur_stage = 0
-        menu_stage = self._build_stage_menu()
-
-        self._main_menu = pygame_menu.Menu(
-            back_box=False,
-            height=self.HEIGHT * 0.6,
-            theme=pygame_menu.themes.THEME_ORANGE,
-            onclose=pygame_menu.events.DISABLE_CLOSE,
-            title=self.TITLE,
-            width=self.WIDTH * 0.6,
-        )
-
-        self._main_menu.add_button('Play', lambda: self.on_click_play_btn(play_process))
-        self._main_menu.add_button('Stage', menu_stage)
-        self._main_menu.add_button('Quit', self.on_click_quit_btn)
-
-        SwitchViewControl.__init__(self, fps=50)  # call self._create_view
-
-    def _build_stage_menu(self):
+    def _build_level_menu(self, play_process: Callable, *args):
+        regex = re.compile("^[0-9]+.")
         submenu_theme = pygame_menu.themes.THEME_ORANGE.copy()
 
         submenu_theme.widget_font_size = 30
+        submenu_theme.widget_font = self.FONT_NAME_CONSOLAS
+        # submenu_theme.title_font = pygame_menu.font.FONT_MUNRO
 
         menu_stage = pygame_menu.Menu(
             height=self.HEIGHT * 0.5,
             theme=submenu_theme,
+            onclose=lambda: self.exit_app(),  # optional
             title='Stage',
             width=self.WIDTH * 0.7,
         )
-        for level in range(30):
-            # menu_stage.add_button('Back {0}'.format(i), pygame_menu.events.BACK)
-            menu_stage.add_button('Back {0}'.format(level), self.select_level, level)
-        menu_stage.add_button('Return to main menu', pygame_menu.events.RESET)
+        source_dir = Path(self.config.ARTICLE_DIR)
+        level_info_list = [(regex.search(file_path.name).group().replace('.', ''), file_path.stem) for file_path in source_dir.glob('*.*')]  # 1.apple.txt => (1., 1.apple)  => (1, 1.apple)
+        level_info_list = [(n_level, name.replace(n_level+'.', '')) for n_level, name in sorted(level_info_list, key=lambda e: int(e[0]))]  # (1, apple)
+
+        for level, name in level_info_list:
+
+            article_name = f'{level + " " * (4-len(level))} {name}' if len(level) < 4 else f'{level} {name}'
+            article_name = article_name[:12] + '...' if 16 - len(article_name) < 0 else article_name + ' ' * (16 - len(article_name))
+            menu_stage.add_button(f'{article_name:<16s}', play_process, int(level))
+        menu_stage.add_button(f'{"RETURN":<11s}', lambda: self.exit_app())
         return menu_stage
-
-    def select_level(self, level: int):
-        self._cur_stage = level
-
-    def on_click_play_btn(self, play_process: Callable):
-        return play_process(self.cur_stage)
-
-    def on_click_quit_btn(self):
-        self.__is_running = False
-
-    def _create_view(self, fps: int) -> Generator[None, None, None]:
-        clock = pygame.time.Clock()
-        org_caption = self.get_caption()
-        self.set_caption(self.TITLE)
-        while 1:
-            yield
-            while self.__is_running:
-
-                for event in self.get_event():
-                    if self.is_quit_event(event):
-                        self.exit_app()
-
-                    if self.is_press_escape_event(event):
-                        self.set_caption(org_caption)
-                        return None
-
-                    # self.main_menu.mainloop(self.window, self.main_background, disable_loop=False, fps_limit=fps)
-                    self._main_menu.draw(surface=self.window, clear_surface=True)
-                    self._main_menu.update([event])
-
-                self.update()
-                clock.tick(fps)
