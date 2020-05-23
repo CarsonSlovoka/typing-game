@@ -1,4 +1,4 @@
-__all__ = ('PyGameView', 'GameOverView', 'HomeView')
+__all__ = ('PyGameView', 'GameOverView', 'HomeView', 'SelectLevelView')
 
 from abc import ABC
 from typing import Tuple, Callable, List, Generator, Union
@@ -12,6 +12,9 @@ from .controllers import PyGameKeyboard, SwitchViewControl
 import pygame
 from pygame import Surface
 from pygame.event import EventType
+
+import pygame_menu
+
 from pathlib import Path
 import sys
 
@@ -277,23 +280,103 @@ class HomeView(PyGameKeyboard, SwitchViewControl, HomeViewBase, SafeMember):
                                         ]
         org_caption = self.get_caption()
         while 1:
-            for event in self.get_event():
-                if self.is_press_escape_event(event) or self.is_quit_event(event):
-                    self.exit_app()
+            yield
+            while self.__is_running:
+                for event in self.get_event():
+                    if self.is_press_escape_event(event) or self.is_quit_event(event):
+                        self.exit_app()
 
+                    for obj in btn_list:
+                        obj.handle_event(event)
+                        self.set_caption(org_caption)
+
+                self.window.fill(self.BACKGROUND_COLOR)
+                self.draw_spark_image()
                 for obj in btn_list:
-                    obj.handle_event(event)
-                    self.set_caption(org_caption)
+                    obj.draw(self.window)
 
-            self.window.fill(self.BACKGROUND_COLOR)
-            self.draw_spark_image()
-            for obj in btn_list:
-                obj.draw(self.window)
-
-            self.update()
-            clock.tick(fps)
+                self.update()
+                clock.tick(fps)
 
     @staticmethod
     def on_click_btn(sub_process: Callable = None):
         if sub_process:
             sub_process()
+
+
+class SelectLevelView(PyGameKeyboard, SwitchViewControl, PyGameView, SafeMember):
+
+    __slots__ = ('_main_menu', '_cur_stage') + SwitchViewControl.__other_slots__ + HomeViewBase.__slots__
+
+    TITLE = 'Select the Stage'
+
+    def __init__(self, play_process: Callable):
+        PyGameView.__init__(self)
+        self.__is_running = True
+
+        self._cur_stage = 0
+        menu_stage = self._build_stage_menu()
+
+        self._main_menu = pygame_menu.Menu(
+            back_box=False,
+            height=self.HEIGHT * 0.6,
+            theme=pygame_menu.themes.THEME_ORANGE,
+            onclose=pygame_menu.events.DISABLE_CLOSE,
+            title=self.TITLE,
+            width=self.WIDTH * 0.6,
+        )
+
+        self._main_menu.add_button('Play', lambda: self.on_click_play_btn(play_process))
+        self._main_menu.add_button('Stage', menu_stage)
+        self._main_menu.add_button('Quit', self.on_click_quit_btn)
+
+        SwitchViewControl.__init__(self, fps=50)  # call self._create_view
+
+    def _build_stage_menu(self):
+        submenu_theme = pygame_menu.themes.THEME_ORANGE.copy()
+
+        submenu_theme.widget_font_size = 30
+
+        menu_stage = pygame_menu.Menu(
+            height=self.HEIGHT * 0.5,
+            theme=submenu_theme,
+            title='Stage',
+            width=self.WIDTH * 0.7,
+        )
+        for level in range(30):
+            # menu_stage.add_button('Back {0}'.format(i), pygame_menu.events.BACK)
+            menu_stage.add_button('Back {0}'.format(level), self.select_level, level)
+        menu_stage.add_button('Return to main menu', pygame_menu.events.RESET)
+        return menu_stage
+
+    def select_level(self, level: int):
+        self._cur_stage = level
+
+    def on_click_play_btn(self, play_process: Callable):
+        return play_process(self.cur_stage)
+
+    def on_click_quit_btn(self):
+        self.__is_running = False
+
+    def _create_view(self, fps: int) -> Generator[None, None, None]:
+        clock = pygame.time.Clock()
+        org_caption = self.get_caption()
+        self.set_caption(self.TITLE)
+        while 1:
+            yield
+            while self.__is_running:
+
+                for event in self.get_event():
+                    if self.is_quit_event(event):
+                        self.exit_app()
+
+                    if self.is_press_escape_event(event):
+                        self.set_caption(org_caption)
+                        return None
+
+                    # self.main_menu.mainloop(self.window, self.main_background, disable_loop=False, fps_limit=fps)
+                    self._main_menu.draw(surface=self.window, clear_surface=True)
+                    self._main_menu.update([event])
+
+                self.update()
+                clock.tick(fps)

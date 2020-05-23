@@ -17,7 +17,7 @@ from .api.utils import SafeMember, after_end
 from .api.mixins.colors import TypingGameColorMixin
 from .api.mixins import typings
 from .api.generics import RGBColor
-from .views import PyGameView, GameOverView, HomeView
+from .views import PyGameView, GameOverView, HomeView, SelectLevelView
 from .controllers import PyGameKeyboard
 from . import config
 import abc
@@ -321,7 +321,8 @@ class TypingGameApp(HomeView):
         self.__is_running = True
         super().__init__(caption_name='Welcome to the Typing World.',
                          drop_down_process=lambda: TypingDropDown(conf.DROPDOWN_TXT).start_game(parent=self),
-                         article_process=lambda: TypingArticle(conf.ARTICLE_DIR).start_game(init_level=0),
+                         article_process=lambda: SelectLevelView(play_process=lambda n_stage: TypingArticle(conf.ARTICLE_DIR).start_game(init_level=n_stage)
+                                                                 ).show(),  # call _create_view
                          setting_process=None,
                          )
 
