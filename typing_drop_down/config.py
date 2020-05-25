@@ -7,3 +7,5 @@ DROPDOWN_TXT = __this_dir__ / Path('words.txt')
 
 # TypingArticle
 ARTICLE_DIR = __this_dir__ / Path('article')
+
+WIDTH, HEIGHT = (1600, 600)

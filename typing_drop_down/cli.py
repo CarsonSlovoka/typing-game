@@ -7,8 +7,9 @@ if 'env path':
     from typing_drop_down import __version__
     from typing_drop_down.api.utils import after_end
     from typing_drop_down.core import TypingGameApp
-
+    from typing_drop_down.views import PyGameView
     sys.path.remove(sys.path[0])
+
 import inspect
 import importlib.machinery
 import types
@@ -55,7 +56,9 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
     user_config = get_config(args.config)
-    TypingGameApp(user_config)
+    PyGameView.HEIGHT = user_config.HEIGHT
+    PyGameView.WIDTH = user_config.WIDTH
+    TypingGameApp(user_config).start()
 
 
 if __name__ == '__main__':
