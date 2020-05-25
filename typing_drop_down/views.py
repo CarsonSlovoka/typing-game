@@ -78,7 +78,8 @@ class PyGameView(
         position: (x, y)
         """
         if font is None:
-            font = pygame.font.SysFont(font_name, font_size)
+            # pygame.font.get_fonts()
+            font = pygame.font.SysFont(f'{font_name}', font_size)
         text = font.render(text, True, font_color)
         rect = self.window.blit(text, position)
         return rect.topright

@@ -154,7 +154,8 @@ class TypingArticle(_TypingGameBase):
     def draw_article(self, article: str, x_init: int, y_init: int, font_color, y_gap: int):
         x, y = x_init, y_init
         for row_data in article.splitlines():
-            self.draw_text(row_data, (x, y), self.FONT_NAME_CONSOLAS, font_color)
+            pos = self.draw_text(row_data, (x, y), self.FONT_NAME_CONSOLAS, font_color)
+            self.draw_text('↙', (pos[0], pos[1]-9), self.FONT_NAME_MALGUNGOTHIC, font_color)
             y += y_gap
 
     @staticmethod
@@ -220,7 +221,7 @@ class TypingArticle(_TypingGameBase):
             if char == '\n':
                 char = ''
                 cur_pos = (init_pos[0], cur_pos[1] + y_gap)
-            cur_pos = self.draw_text(char, cur_pos, self.FONT_NAME_CONSOLAS, self.FORE_COLOR)
+            cur_pos = self.draw_text(char, cur_pos, self.FONT_NAME_CONSOLAS, self.FORE_COLOR)  # it will return the pos
             pos_list.append(cur_pos)
 
         # Draw a character one by one and pass the current position to the next function.
@@ -261,7 +262,8 @@ class TypingArticle(_TypingGameBase):
                     if cur_draw is None:
                         continue
                     if cur_char == '\n':
-                        cur_char = ''
+                        self.draw_text('↙', (pos[0], pos[1]-9), self.FONT_NAME_MALGUNGOTHIC, font_color)
+                        continue
                     cur_draw(cur_char, pos, font_color)
                 # underline = re.sub(r'[^\n]', " ", pressed_word) + "_"  # Any characters except not space.
                 # self.draw_article(underline, const_x_init, const_y_init + 10, font_color=self.TYPING_CUR_POS_COLOR, y_gap=const_y_gap)

@@ -1,6 +1,7 @@
 class FontProportionalSpacingMixin:
     __slots__ = ()
     FONT_NAME_COMIC_SANS_MS = 'ComicSansMs'
+    FONT_NAME_MALGUNGOTHIC = 'malgungothic'
 
 
 class FontMonoSpacingMixin:
