@@ -57,13 +57,13 @@ jobs:
           name: "RESTORE CACHE: requirements.txt and setup.py"
           key: v1-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-setup-{{ .Branch }}-{{ checksum "setup.py" }}
       - run:
-          name: Running tests
+          name: Test [entry_points]
           command: |
             ls .
             . env_$CIRCLE_PROJECT_REPONAME/bin/activate
-            which ydl_cli
-            typing_drop_down --version
-            typing_drop_down --help
+            which typing_game
+            typing_game --version
+            typing_game --help
       - store_artifacts:
           path: test-reports/
           destination: python_app
