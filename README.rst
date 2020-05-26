@@ -44,6 +44,18 @@ DEMO
 .. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/stage.png
 .. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/article.png
 
+
+Contributing
+===============
+
+If you want to contribute, please use **Dev**\'s branch as the main branch,
+The **master** branch is just purely used to create a GitHub page.
+
+Be sure to **write tests** for new features. If you have any difficulties, you can ask me or discuss with me. I am glad if you want to join us.
+
+By the way, I'm very friendly!
+
+
 More
 ===========
 
