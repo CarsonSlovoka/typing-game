@@ -1,10 +1,14 @@
+__all__ = ('test_setup',)
+
 import setuptools
 from setuptools import setup, find_packages
 from setuptools.command.test import test as test_class
 
+
 if 'env path':
     import typing_drop_down
     from typing_drop_down import __version__
+    from typing_drop_down.test.test import test_setup
 
 VERSION_NUMBER = __version__
 DOWNLOAD_VERSION = __version__
@@ -86,4 +90,5 @@ setup(
             f'typing_game={PACKAGES_DIR}.cli:main',
         ],
     },
+    test_suite='setup.test_setup',  # `python setup.py test` will call this function. # return value must is `suite`
 )

@@ -1,3 +1,6 @@
+__all__ = ('test_setup',)
+
+import unittest
 from unittest import TestCase
 from pathlib import Path
 import sys
@@ -12,6 +15,7 @@ if 'env path':
     from typing_drop_down.api.utils import ShowTestDescription
     from typing_drop_down import config as default_config
     from typing_drop_down.cli import get_config
+    from typing_drop_down.cli import main as cli_main
     from typing_drop_down.api.utils import after_end
     sys.path.remove(sys.path[0])
 
@@ -65,3 +69,27 @@ class IntegrateTests(TestCase):
             with self.assertRaises(SystemExit) as result:
                 TypingGameApp(config).start()
             self.assertEqual(result.exception.code, 1)
+
+
+class CLITests(ShowTestDescription):
+    def test_show_version(self):
+        with self.assertRaises(SystemExit) as context_manager:
+            cli_main(['--version'])
+        self.assertEqual(context_manager.exception.code, 0)
+
+    def test_show_help(self):
+        with self.assertRaises(SystemExit) as context_manager:
+            cli_main(['--help'])
+        self.assertEqual(context_manager.exception.code, 0)
+
+
+def test_setup():
+    suite_list = [unittest.TestLoader().loadTestsFromTestCase(class_module) for class_module in (CLITests, )]
+    suite_class_set = unittest.TestSuite(suite_list)
+
+    # suite_function_set = unittest.TestSuite()
+    # suite_function_set.addTest(module.class('fun_name'))
+
+    suite = suite_class_set  # pick one of two: suite_class_set, suite_function_set
+    # unittest.TextTestRunner(verbosity=1).run(suite)  # self.verbosity = 0  # 0, 1, 2.  unittest.TextTestResult
+    return suite

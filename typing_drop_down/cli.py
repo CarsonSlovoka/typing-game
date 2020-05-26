@@ -53,9 +53,9 @@ def build_parser() -> argparse.ArgumentParser:
     return main_parser
 
 
-def main():
+def main(cmd_list: list = None):
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(cmd_list) if cmd_list else parser.parse_args()
     user_config = get_config(args.config)
     PyGameView.HEIGHT = user_config.HEIGHT
     PyGameView.WIDTH = user_config.WIDTH
