@@ -40,7 +40,7 @@ class SphinxBuilder:
         self.master_file = master_file
 
         self.source_dir = source_dir
-        self.output_dir = self.master_file.parent.parent / Path(f'temp/{self.LANGUAGE}') if output_dir is None else Path(output_dir)
+        self.output_dir = self.master_file.parent.parent / Path(f'docs/{self.LANGUAGE}') if output_dir is None else Path(output_dir)
         self.master_doc = master_file.stem  # 'index'
         self.check_css_files()
 

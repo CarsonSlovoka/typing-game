@@ -15,7 +15,7 @@ if 'sys path setting':
 
 master_file = Path(__file__).parent / Path('doc.rst')
 source_dir = Path(__file__).parent
-output_path = None  # default Path(master_file).parent.parent / temp / language
+output_path = None  # default Path(master_file).parent.parent / docs / language
 
 master_doc = master_file.stem
 project = 'Typing Game'  # project_name
