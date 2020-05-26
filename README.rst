@@ -47,4 +47,4 @@ DEMO
 More
 ===========
 
-See the `temp/{language}/doc.html`
+See the `documentation <https://carsonslovoka.github.io/typing-game/>`_
