@@ -36,6 +36,14 @@ an example of conf.py:
 
     WIDTH, HEIGHT = (1600, 600)
 
+DEMO
+==========
+
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/home.png
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/dropdown.png
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/stage.png
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/article.png
+
 More
 ===========
 
