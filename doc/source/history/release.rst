@@ -45,7 +45,7 @@ Strike
 
 :ISSUES:
     :dropdown: The display of text color needs to be strengthened.
-    :article: |ss|\There is no chooses to provide you with select the article, which you want to type. |se| <-- added on the **0.2.0**
+    :article: |ss|\There is no chooses to provide you with select the article, which you want to type. |se| <-- added on the 0.2.0
 
 
 0.0.0

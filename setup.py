@@ -13,7 +13,7 @@ if 'env path':
 VERSION_NUMBER = __version__
 DOWNLOAD_VERSION = __version__
 PACKAGES_DIR = typing_drop_down.__name__
-SETUP_NAME = PACKAGES_DIR.replace('_', '-')
+SETUP_NAME = 'typing-game'  # PACKAGES_DIR.replace('_', '-')
 
 GITHUB_URL = f'https://github.com/CarsonSlovoka/{SETUP_NAME}/tree/master'
 
