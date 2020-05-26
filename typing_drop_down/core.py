@@ -4,12 +4,6 @@ import pygame
 
 from typing import Generator
 
-from tkinter import *
-from tkinter import messagebox
-
-if 'tk withdraw':
-    Tk().wm_withdraw()  # to hide the main window
-
 import random
 from pathlib import Path
 
@@ -132,6 +126,10 @@ class TypingDropDown(_TypingGameBase):
 
     @staticmethod
     def ask_retry():
+        from tkinter import messagebox, Tk
+
+        if 'tk withdraw':
+            Tk().wm_withdraw()  # to hide the main window
         # event = pygame.event.wait()
         # if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:  # press space to restart
         return messagebox.askokcancel('Game over', 'try again?')
