@@ -10,6 +10,11 @@
 Release Note
 ==================
 
+0.2.1
+=========
+
+Published to PyPI and Github
+
 0.2.0
 =========
 
