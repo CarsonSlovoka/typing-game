@@ -2,7 +2,8 @@ import sys
 from pathlib import Path
 
 if 'env path':
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    print(str(Path(__file__).parent.parent.parent.absolute()))
     from typing_drop_down import config as default_config
     from typing_drop_down import __version__
     from typing_drop_down.api.utils import after_end
