@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block body %}
+    <select name="form" onchange="location = this.value;">
+        <option value="hide">－－Language－－</option>
+    {% for cur_lang, alias_name in support_lang_list %}
+
+        {% if alias_name %}
+            {% set alias_name = " (" + alias_name + ")" %}
+        {% endif %}
+        <option value="https://carsonslovoka.github.io/typing-game/{{ cur_lang }}/{{ pagename }}.html">{{ cur_lang + alias_name }}</option>
+        <!-- <option value="zh_TW/doc.html">zh-TW (繁體中文)</option> -->
+    {% endfor %}
+    </select>
+    {{ body }}
+
+
+  <!--  <script type="text/javascript" src="./_static/js/select.js"></script>  Put this at the bottom, because this script will change elements. -->
+  {% for scriptfile in script_files if scriptfile == '_static/js/select.js' %}
+        {{ js_tag(scriptfile) }}
+  {% endfor %}
+
+{% endblock %}

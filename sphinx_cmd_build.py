@@ -1,4 +1,5 @@
 from pathlib import Path
+from sphinx.builders.html import StandaloneHTMLBuilder  # self.globalcontext
 import sys
 if 'eny path':
     # sys.path
@@ -88,6 +89,8 @@ class SphinxBuilder:
                              doc_tree_dir, self.BUILD_FORMAT, conf_overrides,
                              status, warning, freshenv, warningiserror,
                              tags, verbosity, jobs, keep_going)
+                if isinstance(app.builder, StandaloneHTMLBuilder):
+                    ...
                 app.build(self.FORCE_REBUILD, filenames)
 
                 return app.statuscode
