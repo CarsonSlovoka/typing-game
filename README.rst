@@ -1,3 +1,54 @@
+.. raw:: html
+
+    <p align="left">
+
+        <a href="https://pypi.org/project/typing-game/">
+        <img src="https://img.shields.io/static/v1?&style=plastic&logo=pypi&label=App&message=typing-game&color=00FFFF"/></a>
+
+        <a href="https://pypi.org/project/carson-tool.typing-gameTW/">
+        <img src="https://img.shields.io/pypi/v/typing-game.svg?&style=plastic&logo=pypi&color=00FFFF"/></a>
+
+        <a href="https://pypi.org/project/typing-game/">
+        <img src="https://img.shields.io/pypi/pyversions/typing-game.svg?&style=plastic&logo=pypi&color=00FFFF"/></a>
+
+        <a href="https://github.com/CarsonSlovoka/typing-game/blob/master/LICENSE">
+        <img src="https://img.shields.io/pypi/l/typing-game.svg?&style=plastic&logo=pypi&color=00FFFF"/></a>
+
+        <br>
+
+        <a href="https://github.com/CarsonSlovoka/typing-game">
+        <img src="https://img.shields.io/github/last-commit/CarsonSlovoka/typing-game?&style=plastic&logo=github&color=00FF00"/></a>
+
+        <img src="https://img.shields.io/github/commit-activity/y/CarsonSlovoka/typing-game?&style=plastic&logo=github&color=0000FF"/>
+
+        <a href="https://github.com/CarsonSlovoka/typing-game">
+        <img src="https://img.shields.io/github/contributors/CarsonSlovoka/typing-game?&style=plastic&logo=github&color=111111"/></a>
+
+        <a href="https://github.com/CarsonSlovoka/typing-game">
+        <img src="https://img.shields.io/github/repo-size/CarsonSlovoka/typing-game?&style=plastic&logo=github"/></a>
+
+        <br>
+
+        <a href="https://pepy.tech/project/typing-game">
+        <img src="https://pepy.tech/badge/typing-game"/></a>
+
+        <!--
+
+        <a href="https://pepy.tech/project/typing-game/month">
+        <img src="https://pepy.tech/badge/typing-game/month"/></a>
+
+        <a href="https://pepy.tech/project/typing-game/week">
+        <img src="https://pepy.tech/badge/typing-game/week"/></a>
+
+        -->
+
+        <!--
+            <img src="https://img.shields.io/github/commits-since/m/CarsonSlovoka/typing-game/Dev?label=commits%20to%20be%20deployed"/></a>
+        -->
+
+    </p>
+
+
 ==================
 Typing Game
 ==================
@@ -36,6 +87,26 @@ an example of conf.py:
 
     WIDTH, HEIGHT = (1600, 600)
 
+.. uml::
+
+    @startmindmap
+
+    *[#Orange] "C:/temp"
+    **_ words.txt
+    ** article
+    ***_ 1.basic.txt
+    ***_ 2.level2.txt
+    ***_ 100.language.py
+
+    @endmindmap
+
+.. note::
+
+    Each file on the articles, which name should start with a number and use the dot to split the name.
+
+    The file extension can be in any format, not limited to text files.
+
+
 DEMO
 ==========
 
@@ -48,7 +119,7 @@ DEMO
 Contributing
 ===============
 
-If you want to contribute, please use **Dev**\'s branch as the main branch,
+If you want to contribute, please use **release**\'s branch as the main branch,
 The **master** branch is just purely used to create a GitHub page.
 
 Be sure to **write tests** for new features. If you have any difficulties, you can ask me or discuss with me. I am glad if you want to join us.

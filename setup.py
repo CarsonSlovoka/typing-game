@@ -7,7 +7,7 @@ from setuptools.command.test import test as test_class
 
 if 'env path':
     import typing_drop_down
-    from typing_drop_down import __version__
+    from typing_drop_down import __version__, __description__
     from typing_drop_down.test.test import test_setup
 
 VERSION_NUMBER = __version__
@@ -42,8 +42,15 @@ def custom_find_package_modules(self, package, package_dir):
 setuptools.command.build_py.build_py.find_package_modules = custom_find_package_modules
 
 
+LONG_DESCRIPTION = ""
 with open('README.rst', encoding='utf-8') as f:
-    LONG_DESCRIPTION = f.read()
+    # https://pepy.tech can't be attached.
+    for begin_idx, line in enumerate(f):
+        if line.strip().startswith('===='):
+            break
+    f.seek(0)
+    LONG_DESCRIPTION = ''.join([line for idx, line in enumerate(f) if idx >= begin_idx])
+
 
 with open('requirements.txt') as req_txt:
     LIST_REQUIRES = [line.strip() for line in req_txt if not line.startswith('#') and line.strip() != '']
@@ -62,7 +69,7 @@ setup(
     author_email='jackparadise520a@gmail.com',
     install_requires=LIST_REQUIRES,
     url=GITHUB_URL,
-    description='Tilt corrector for the text image',
+    description=__description__,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/x-rst',
     keywords=['typing', 'game', 'pygame', 'pygame-menu', ],
