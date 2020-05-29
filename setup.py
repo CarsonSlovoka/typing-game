@@ -59,7 +59,7 @@ setup(
     name=SETUP_NAME,
     version=VERSION_NUMBER,  # x.x.x.{dev, a, b, rc}
 
-    packages=find_packages(exclude=['*.test_cases']),
+    packages=find_packages(exclude=['*.test_cases']),  # Only include the directory that contains the file of __init__.
 
     include_package_data=True,  # include any data files it finds inside your package directories that are specified by your MANIFEST.in
     package_data={f'{PACKAGES_DIR}': ['_static/home.jpg', ],
