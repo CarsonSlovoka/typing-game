@@ -66,14 +66,18 @@ class PyGameView(
     def view_update(self):
         return PyGameView.update(self)
 
-    def clear_canvas(self):
+    def clear_canvas(self, other_surface: List[Surface] = None):
         self.window.fill(self.BACKGROUND_COLOR)  # clear all for redraw
+        if other_surface:
+            for surface in other_surface:
+                surface.fill(self.BACKGROUND_COLOR)
 
     def destroy_view(self):
         pygame.quit()
 
     def draw_text(self, text: str, position: Tuple[int, int],
-                  font_name: FontNameListMixin, font_color=None, font_size=32, font=None):
+                  font_name: FontNameListMixin, font_color=None, font_size=32, font=None,
+                  target: Surface = None) -> pygame.Rect:
         """
         position: (x, y)
         """
@@ -81,8 +85,13 @@ class PyGameView(
             # pygame.font.get_fonts()
             font = pygame.font.SysFont(f'{font_name}', font_size)
         text = font.render(text, True, font_color)
-        rect = self.window.blit(text, position)
-        return rect.topright
+        rect = self.window.blit(text, position) if target is None else target.blit(text, position)
+        return rect
+
+    def draw(self, source:Surface, target: Surface,
+             position: Tuple[int, int]):
+        # source.blit(target,
+        source.convert_alpha()
 
     def exit_app(self):
         self.destroy_view()
