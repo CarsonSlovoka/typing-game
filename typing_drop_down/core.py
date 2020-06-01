@@ -54,8 +54,14 @@ class TypingDropDown(_TypingGameBase):
 
     SPEED = 0.003
 
-    def __init__(self, words_file: Path):
+    def __init__(self, words_file: Union[Path, str]):
         PyGameView.__init__(self, caption_name='Typing Drop down')
+
+        if isinstance(words_file, str):
+            words_file = Path(words_file)
+        if not words_file.exists():
+            raise FileNotFoundError(f'{words_file.absolute()}')
+
         with open(str(words_file)) as f:
             self._word_set = f.read().splitlines()
         if len(self._word_set) == 0:
