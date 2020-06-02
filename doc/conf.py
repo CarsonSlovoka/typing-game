@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinxcontrib.plantuml',
     '_ext.txtlexer',
-    '_ext.edit_on_github',
+    # '_ext.edit_on_github',  <-- test only
     '_ext.select_language',
 ]
 
@@ -89,7 +89,7 @@ if 'localization':
     locale_dirs = ['locale/']  # path is example but recommended.
 
     if 'my setting':
-        support_lang_list = [('en', ""), ('zh_TW', '繁體中文'), ]
+        support_lang_list = [('en', ""), ('zh_TW', '繁體中文 待開發'), ]
         get_text_output_dir = Path(__file__).parent / '_gettext'
 
 if 'my setting':
