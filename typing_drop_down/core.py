@@ -19,6 +19,7 @@ import abc
 from typing import Tuple, Union, List, Callable
 import re
 import types
+from time import sleep
 from dataclasses import dataclass
 
 
@@ -154,8 +155,7 @@ class TypingArticle(_TypingGameBase):
     def draw_panel(self, accuracy: Tuple[int, int], wpm: int) -> pygame.Rect:
         num_ok_char, num_error_char = accuracy
         total_char = max(num_ok_char + num_error_char, 1)
-        self.draw_text(f'Accuracy:{(num_ok_char / total_char):<.2f}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
-        return self.draw_text(f'WPM:{wpm}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+        return self.draw_text(f'Accuracy:{(num_ok_char / total_char):<.2f}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
 
     def draw_article(self, article: str, x_init: int, y_init: int, font_color, y_gap: int):
         x, y = x_init, y_init
@@ -205,7 +205,7 @@ class TypingArticle(_TypingGameBase):
         class InitGameStruct:
             __slots__ = ('reset_flag', 'surface_article', 'history_draw_list',
                          'draw_index', 'underline_index', 'num_ok_char', 'num_error_char',
-                         'pos_list', 'chosen_article', 'pressed_words')
+                         'pos_list', 'chosen_article', 'pressed_words', 'reset_timer')
             reset_flag: bool  # If reset is true, it will get the article by the level which you passed, Otherwise return the next level correspond to the current level.
             surface_article: Surface  # A canvas that draws the article only.
             history_draw_list: List[Tuple[str, Tuple[int, int], bool, RGBColor, Callable]]  # It records every information of the character. Get more, please see the instance.
@@ -216,6 +216,7 @@ class TypingArticle(_TypingGameBase):
             pos_list: List[Tuple[int, int]]  # The element means that the position that is for the character to draw.
             chosen_article: str  # The string for represent the article that is user provided.
             pressed_words: str  # To store the input string from the user
+            reset_timer: bool  # It's a Flag to tell the timer start to calculate the WPM etc.
 
         article, title, reset_flag = next(self.article) if n_level is None else self.article.send(n_level)
         surface_article = Surface((self.WIDTH, self.HEIGHT))
@@ -255,8 +256,9 @@ class TypingArticle(_TypingGameBase):
         underline_index = 0
         num_ok_char, num_error_char = 0, 0
         pressed_word = ''
+        reset_timer = True
         return InitGameStruct(reset_flag, surface_article, history_draw_list, draw_index, underline_index,
-                              num_ok_char, num_error_char, pos_list, article, pressed_word)
+                              num_ok_char, num_error_char, pos_list, article, pressed_word, reset_timer)
 
     def start_game(self, init_level: int):
         fps = 25
@@ -266,11 +268,11 @@ class TypingArticle(_TypingGameBase):
         const_y_gap = 50
 
         game = self.init_game(const_y_gap, init_level)
-        calculate_pm_info = self.generator_pm_info()
-        cpm, wpm = next(calculate_pm_info)  # init
         game_over_view = GameOverView(caption_name='Game over')  # cache view
         need_update = True
         panel_bottom = None
+        calculate_pm_info = self.generator_pm_info()
+        cpm, wpm = next(calculate_pm_info)  # init
         while 1:
             if game.underline_index == len(game.chosen_article):
                 # next level
@@ -285,8 +287,16 @@ class TypingArticle(_TypingGameBase):
                 cpm, wpm = calculate_pm_info.send(True)
                 continue
 
-            if need_update:
+            if not need_update:
+                if game.num_ok_char + game.num_error_char > 4:
+                    # Update WPM if and only if the length of typing character greater than 4
+                    pygame.draw.rect(self.window, self.BACKGROUND_COLOR, (10, 5, self.WIDTH, 45))
+                    self.draw_text(f'WPM:{wpm}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+                    self.view_update()
+            else:
                 self.clear_canvas()
+                if game.num_ok_char + game.num_error_char >= 5:
+                    self.draw_text(f'WPM:{wpm}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
                 init_panel_bottom = self.draw_panel((game.num_ok_char, game.num_error_char), wpm).bottomleft
                 if panel_bottom is None:
                     panel_bottom = init_panel_bottom
@@ -321,6 +331,10 @@ class TypingArticle(_TypingGameBase):
                         continue
 
                     need_update = True
+                    if game.reset_timer:
+                        cpm, wpm = calculate_pm_info.send(True)
+                        # sleep(0.0666)  # 180 wpm = 15 cps => 1 char
+                        game.reset_timer = False
 
                     if pressed_key == '\r':
                         pressed_key = '\n'
@@ -362,7 +376,7 @@ class TypingArticle(_TypingGameBase):
                             game.draw_index = game.underline_index
                             game.underline_index += 1
 
-                    cpm, wpm = calculate_pm_info.send(game.num_ok_char)
+            cpm, wpm = calculate_pm_info.send(game.num_ok_char)
 
             clock.tick(fps)  # Make sure that the FPS is keeping to this value.
 
