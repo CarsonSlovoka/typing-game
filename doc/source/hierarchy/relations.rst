@@ -51,3 +51,31 @@ class UML
         }
     }
     @enduml
+
+
+Program processing
+=====================
+
+.. uml::
+
+    @startuml
+    |cli|
+    start
+    :main();
+
+    |core|
+    :TypingGameApp;
+
+    fork
+        -[#green]-> not implement;
+        :setting;
+        detach
+    fork again
+        :TypingDropDown;
+    fork again
+        :SelectLevelView;
+        :TypingArticle;
+    endfork
+
+    stop
+    @enduml
