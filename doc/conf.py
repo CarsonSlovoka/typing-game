@@ -36,6 +36,7 @@ extensions = [
     '_ext.txtlexer',
     # '_ext.edit_on_github',  <-- test only
     '_ext.select_language',
+    '_ext.plugin_disqus',
 ]
 
 todo_include_todos = True
@@ -47,7 +48,8 @@ if 'html setting':
     html_css_files = ['css/user_define.css',  # copy_asset(src=Path(self.confdir)/entry), out=Path(self.outdir) / Path('_static'))
                       'css/pygments.vim.css',
                       'css/themes/rtd.page.css',
-                      'css/select.css', ]
+                      'css/select.css',
+                      ]
     html_js_files = [  # search ``def setup_js_tag_helper``
         'js/select.js',
     ]
@@ -98,3 +100,7 @@ if 'my setting':
     # RST_EPILOG = '\n'.join([f'..include:: {Path(__file__).parent/Path("_templates/style.define.rst")}'])  <-- not use
 
     FORCE_REBUILD = False  # write all files (default: only write new and changed files)
+
+    if 'Disqus':
+        disqus_short_name = 'typinggame'
+        disqus_url_root = f'https://carsonslovoka.github.io/typing-game/{language}'

@@ -1,24 +1,4 @@
-"""
-This script is an old fashioned, but it can teach you how to write the extension.
-"""
-
-from pathlib import Path
-from typing import Union
-import warnings
 from sphinx.application import Sphinx
-from docutils.nodes import Node
-from docutils.nodes import document
-
-
-def get_github_url(app, mode, path):
-    """
-
-    :param app:
-    :param mode:  # blob, edit ...
-    :param path:
-    :return:
-    """
-    return f'https://github.com/{app.config.edit_on_github_project}/{mode}/{app.config.edit_on_github_branch}/{path}'
 
 
 def init_support_lang_list(

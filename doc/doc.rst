@@ -47,6 +47,17 @@ Game
     source/hierarchy/*
 
 
+Sphinx
+------------
+
+.. toctree::
+    :caption: Sphinx
+    :glob:
+    :maxdepth: 3
+
+    source/sphinx/disqus.tutorial.rst
+
+
 History
 ==============
 

@@ -1,25 +1,32 @@
+{% if disqus_short_name and disqus_url_root %}
+{% set display_disqus = True %}
+{% endif %}
+
 {% extends "layout.html" %}
 {% block body %}
-    <!--
-    <select name="form" onchange="location = this.value;">
-        <option value="hide">－－Language－－</option>
-    {% for cur_lang, alias_name in support_lang_list %}
 
-        {% if alias_name %}
-            {% set alias_name = " (" + alias_name + ")" %}
-        {% endif %}
-        <option value="https://carsonslovoka.github.io/typing-game/{{ cur_lang }}/{{ pagename }}.html">{{ cur_lang + alias_name }}</option>
-        <option value="zh_TW/doc.html">zh-TW (繁體中文)</option>
-    {% endfor %}
-    </select>
-    -->
-    {{ body }}
+  {{ body }}
 
-
-  <!--  <script type="text/javascript" src="./_static/js/select.js"></script>  Put this at the bottom, because this script will change elements.
-  {% for scriptfile in script_files if scriptfile == '_static/js/select.js' %}
-        {{ js_tag(scriptfile) }}
-  {% endfor %}
+  <!-- too slow
+  <script id="dsq-count-scr" src="//typinggame.disqus.com/count.js" async></script>
+  <a href="https://carsonslovoka.github.io/typing-game/{{ language }}/{{ pagename }}.html#disqus_thread">Link</a>.
   -->
 
+  {% if display_disqus %}
+    <div id="disqus_thread"></div>
+    <script>
+      var disqus_config = function () {
+      this.page.url = "{{ disqus_url_root }}/{{ pagename }}.html";
+      //this.page.identifier = PAGE_IDENTIFIER;
+      };
+
+      (function() { // DON'T EDIT BELOW THIS LINE
+      var d = document, s = d.createElement('script');
+      s.src = 'https://{{ disqus_short_name }}.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  {% endif %}
 {% endblock %}
