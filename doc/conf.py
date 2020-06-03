@@ -42,6 +42,23 @@ extensions = [
 todo_include_todos = True
 pygments_style = pygments.styles.STYLE_MAP['vim'].split('::')[0]  # https://help.farbox.com/pygments.html  # https://pygments.org/demo/
 
+exclude_patterns = [  # A list of glob-style patterns that should be excluded when looking for source files.
+
+]
+
+with open(Path(__file__).parent / Path('_static/css/user.define.rst'), 'r') as f:
+    # If your style is not working, try to set FORCE_REBUILD to True.
+    user_define_role = f.read()
+
+# will be included at the end of every source file that is read.
+rst_epilog = '\n'.join([
+    user_define_role + '\n',  # it needs double \n
+])
+
+#  will be included at the beginning of every source file that is read.
+rst_prolog = '\n'.join([
+])
+
 
 if 'html setting':
     html_static_path = ['_static', ]  # search ``def copy_html_static_files``
@@ -97,7 +114,6 @@ if 'localization':
 if 'my setting':
     # LEXERS = dict()  # https://stackoverflow.com/questions/16469869/custom-syntax-highlighting-with-sphinx
     NO_JEKYLL = True  # you need to create an empty file in the root directory that lets GitHub know you aren't using Jekyll to structure your site.
-    # RST_EPILOG = '\n'.join([f'..include:: {Path(__file__).parent/Path("_templates/style.define.rst")}'])  <-- not use
 
     FORCE_REBUILD = False  # write all files (default: only write new and changed files)
 

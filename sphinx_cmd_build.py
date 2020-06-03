@@ -12,6 +12,7 @@ from sphinx.cmd.build import patch_docutils, docutils_namespace, handle_exceptio
 from os import startfile
 from pathlib import Path
 from typing import Union
+import shutil
 
 
 def main(master_file: Path, source_dir: Path, output_dir: Path):
@@ -91,6 +92,10 @@ class SphinxBuilder:
                              tags, verbosity, jobs, keep_going)
                 if isinstance(app.builder, StandaloneHTMLBuilder):
                     ...
+
+                if self.FORCE_REBUILD:
+                    # The Force build seems not to real it is. so just in case, I do it by myself.
+                    shutil.rmtree(self.output_dir, ignore_errors=True)
                 app.build(self.FORCE_REBUILD, filenames)
 
                 return app.statuscode
