@@ -4,6 +4,7 @@
 Typing-Game: Documentation
 ====================================================
 
+
 .. .. contents:: Table of Contents
 
 Article
@@ -47,6 +48,17 @@ Game
     source/hierarchy/*
 
 
+Sphinx
+------------
+
+.. toctree::
+    :caption: Sphinx
+    :glob:
+    :maxdepth: 3
+
+    source/sphinx/disqus.tutorial.rst
+
+
 History
 ==============
 
@@ -56,6 +68,11 @@ History
 
     source/history/release.rst
 
+
+Statistic
+==============
+
+`Counts of the Disqus. <./disqus_statistic.html>`_
 
 ----
 

@@ -11,12 +11,12 @@ import textwrap
 
 if 'env path':
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from typing_drop_down.core import TypingDropDown, TypingGameApp
-    from typing_drop_down.api.utils import ShowTestDescription
-    from typing_drop_down import config as default_config
-    from typing_drop_down.cli import get_config
-    from typing_drop_down.cli import main as cli_main
-    from typing_drop_down.api.utils import after_end
+    from typing_game.core import TypingDropDown, TypingGameApp
+    from typing_game.api.utils import ShowTestDescription
+    from typing_game import config as default_config
+    from typing_game.cli import get_config
+    from typing_game.cli import main as cli_main
+    from typing_game.api.utils import after_end
     sys.path.remove(sys.path[0])
 
 
@@ -44,19 +44,16 @@ class IntegrateTests(TestCase):
         new_conf_content = textwrap.dedent(  # Remove any common leading whitespace from every line in text.
             """\
             from pathlib import Path
-            __this_dir__ = Path('.').parent
-            
-            # TypingDropDown
-            DROPDOWN_TXT = __this_dir__ / Path('words.txt')
-            
-            # TypingArticle
-            ARTICLE_DIR = __this_dir__ / Path('article')
+            __this_dir__ = Path(str(Path('.').parent.absolute()))            
+            DROPDOWN_TXT = __this_dir__ / Path('words.txt')            
+            ARTICLE_DIR = __this_dir__ / Path('article')            
+            WIDTH, HEIGHT = (800, 600)  # <-- It is not working because you are not run the script from the cli.py.
             """)
         # build the user config
         config_path = temp_dir/Path('temp.conf.py')
         with open(config_path, 'w') as config_file, \
             open(temp_dir/Path('words.txt'), 'w') as words_file, \
-            open(temp_dir/Path('article/aaa.txt'), 'w') as article_file:
+            open(temp_dir/Path('article/1.aaa.txt'), 'w') as article_file:
             config_file.write(new_conf_content)
             words_file.write('aaabbbccc')
             article_file.write('article')

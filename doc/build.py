@@ -18,7 +18,7 @@ def get_text():
 def get_po_file():
     support_lang_list = sphinx_setting.support_lang_list
     lang_list = []
-    [lang_list.extend(['-l', lang]) for lang in support_lang_list]
+    [lang_list.extend(['-l', lang]) for lang, alias_name in support_lang_list]
     target_dir = sphinx_setting.get_text_output_dir  # _gettext
     cmd_list = ['update', '-p', str(target_dir)]
     cmd_list.extend(lang_list)
