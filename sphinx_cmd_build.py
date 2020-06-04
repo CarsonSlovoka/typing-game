@@ -19,7 +19,7 @@ from sphinx.cmd.build import patch_docutils, docutils_namespace, handle_exceptio
 from os import startfile
 from pathlib import Path
 from typing import Union
-from doc._ext.plugin_extra_html import setup_extra_html, setup_simple_extra_html
+# from doc._ext.plugin_extra_html import setup_extra_html, setup_simple_extra_html
 import shutil
 
 
@@ -102,7 +102,8 @@ class SphinxBuilder:
                     # The Force build seems not to real it is. so just in case, I do it by myself.
                     shutil.rmtree(self.output_dir, ignore_errors=True)
                 if isinstance(app.builder, StandaloneHTMLBuilder):
-                    setup_simple_extra_html(app)
+                    # setup_simple_extra_html(app)
+                    ...
                 app.build(self.FORCE_REBUILD, filenames)
 
                 return app.statuscode

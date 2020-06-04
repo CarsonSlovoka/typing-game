@@ -8,8 +8,16 @@ import warnings
 from typing import Tuple, Union
 
 
+def expand_init_builder(app):
+    """I did not change the original Sphinx process. I just tell it to do something after finished Sphinx._init_builder."""
+    Sphinx._init_builder(app)
+    setup_simple_extra_html(app)
+    # setup_extra_html(app)
+
+
 def setup(app: Sphinx):
     app.add_config_value('extra_html_path', [], True)  # If you add the variable which is not existed by default, then you should add it. Otherwise, you may consider heck the code.
+    app._init_builder = lambda: expand_init_builder(app)
 
 
 def check(app: Sphinx) -> Tuple[

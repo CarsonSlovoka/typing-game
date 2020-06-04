@@ -106,7 +106,7 @@ if 'html setting':
         'conf_py_path': "doc/",
 
         # other setting
-        "last_updated": True,  # Copyright ... Last updated on True.
+        # "last_updated": True,  # Copyright ... Last updated on True.
     }
     html_favicon = '_static/favicon.png'  # Modern browsers use this as the **icon for tabs**.
     html_logo = '_static/logo.jpg'  # An image file that is the logo of the docs. It is placed at the top of the **sidebar**
