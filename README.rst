@@ -69,7 +69,7 @@ open the command line:
 
 .. note::
 
-    **conf.py** is defined by yourself. About the contents of ``config.py``, please see `here <https://github.com/CarsonSlovoka/typing-game/blob/master/typing_drop_down/config.py>`_.
+    **conf.py** is defined by yourself. About the contents of ``config.py``, please see `here <https://github.com/CarsonSlovoka/typing-game/blob/release/typing_game/config.py>`_.
 
 an example of conf.py:
 
@@ -111,10 +111,10 @@ an example of conf.py:
 DEMO
 ==========
 
-.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/home.png
-.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/dropdown.png
-.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/stage.png
-.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_drop_down/_static/demo/article.png
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_game/_static/demo/home.png
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_game/_static/demo/dropdown.png
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_game/_static/demo/stage.png
+.. image:: https://raw.githubusercontent.com/CarsonSlovoka/typing-game/master/typing_game/_static/demo/article.png
 
 
 Contributing
