@@ -34,9 +34,10 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinxcontrib.plantuml',
     '_ext.txtlexer',
-    # '_ext.edit_on_github',  <-- test only
+    # '_ext.edit_on_github',  # <-- test only
     '_ext.select_language',
     '_ext.plugin_disqus',
+    '_ext.plugin_extra_html',
 ]
 
 todo_include_todos = True
@@ -62,6 +63,9 @@ rst_prolog = '\n'.join([
 
 if 'html setting':
     html_static_path = ['_static', ]  # search ``def copy_html_static_files``
+
+    html_extra_path = [  # Put these HTML to the root of output_dir, but it will not allow you use other variable by default.
+    ]
     html_css_files = ['css/user_define.css',  # copy_asset(src=Path(self.confdir)/entry), out=Path(self.outdir) / Path('_static'))
                       'css/pygments.vim.css',
                       'css/themes/rtd.page.css',
@@ -77,6 +81,10 @@ if 'html setting':
     html_show_sphinx = False
     templates_path = ['_templates/sphinx_rtd_theme'
                       ]  # A list of paths that contain extra templates (or **overwrite**). The path of content, which is Relative paths are taken as relative to the configuration directory.
+    if 'my setting':
+        extra_html_path = ['disqus_statistic.html', ]
+        for extra_html in extra_html_path:
+            assert (Path(__file__).parent / Path(templates_path[0]) / Path(extra_html)).exists(), FileNotFoundError(extra_html)
     # html_theme_path = ["_templates"]  # from ``Lib\site-packages\{theme}\`` copy to ``.\_templates/{theme}``  and **theme.conf** must exist!
     html_theme = 'sphinx_rtd_theme'  # 'nature'
     html_theme_options = {  # see Lib\site-packages\{theme}\theme.conf

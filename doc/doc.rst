@@ -4,6 +4,7 @@
 Typing-Game: Documentation
 ====================================================
 
+
 .. .. contents:: Table of Contents
 
 Article
@@ -67,6 +68,11 @@ History
 
     source/history/release.rst
 
+
+Statistic
+==============
+
+`Counts of the Disqus. <./disqus_statistic.html>`_
 
 ----
 

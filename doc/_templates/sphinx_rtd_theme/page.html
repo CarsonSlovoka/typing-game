@@ -7,15 +7,11 @@
 
   {{ body }}
 
-  <!-- too slow
-  <script id="dsq-count-scr" src="//typinggame.disqus.com/count.js" async></script>
-  <a href="https://carsonslovoka.github.io/typing-game/{{ language }}/{{ pagename }}.html#disqus_thread">Link</a>.
-  -->
-
   {% if display_disqus %}
     <div id="disqus_thread"></div>
     <script>
       var disqus_config = function () {
+      this.language = "{{ language }}";  // change the language
       this.page.url = "{{ disqus_url_root }}/{{ pagename }}.html";
       //this.page.identifier = PAGE_IDENTIFIER;
       };
