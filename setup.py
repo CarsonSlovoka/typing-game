@@ -6,13 +6,13 @@ from setuptools.command.test import test as test_class
 
 
 if 'env path':
-    import typing_drop_down
-    from typing_drop_down import __version__, __description__
-    from typing_drop_down.test.test import test_setup
+    import typing_game
+    from typing_game import __version__, __description__
+    from typing_game.test.test import test_setup
 
 VERSION_NUMBER = __version__
 DOWNLOAD_VERSION = __version__
-PACKAGES_DIR = typing_drop_down.__name__
+PACKAGES_DIR = typing_game.__name__
 SETUP_NAME = 'typing-game'  # PACKAGES_DIR.replace('_', '-')
 
 GITHUB_URL = f'https://github.com/CarsonSlovoka/{SETUP_NAME}/tree/master'

@@ -12,7 +12,7 @@ if 'sys path setting':
     plantuml = f'java -jar {Path(os.environ["USERPROFILE"]) / Path("plantuml.jar")}'  # download: https://plantuml.com/en/download
 
     sys.path.append(str(Path(__file__).parent.parent))  # __version__ # use for ``.. automodule``
-    from typing_drop_down import __version__
+    from typing_game import __version__
 
 master_file = Path(__file__).parent / Path('doc.rst')
 source_dir = Path(__file__).parent
