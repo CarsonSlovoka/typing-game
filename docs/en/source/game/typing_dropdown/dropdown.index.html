@@ -1,15 +1,26 @@
 
 
+
+
+
+
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Introduction to game &mdash; Typing Game 0.2.0 documentation</title>
+  <title>Introduction to game &mdash; Typing Game 0.3.0 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/user_define.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/pygments.vim.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/themes/rtd.page.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/select.css" type="text/css" />
 
   
   
@@ -19,7 +30,9 @@
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
@@ -27,17 +40,11 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
         <script src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/js/select.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/css/user_define.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/css/pygments.vim.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/css/themes/rtd.page.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Typing Article: Introduction to game" href="../typing_article/article.index.html" />
@@ -55,7 +62,22 @@
           
 
           
-            <a href="../../../doc.html" class="icon icon-home"> Typing Game
+            <select name="form" onchange="location = this.value;">
+            <option value="hide">－－Language－－</option>
+            
+              
+              <option value="https://carsonslovoka.github.io/typing-game/en/source/game/typing_dropdown/dropdown.index.html">en</option>
+            
+              
+                  
+              
+              <option value="https://carsonslovoka.github.io/typing-game/zh_TW/source/game/typing_dropdown/dropdown.index.html">zh_TW (繁體中文 待開發)</option>
+            
+            </select>
+          
+
+          
+            <a href="../../../doc.html" class="icon icon-home" alt="Documentation Home"> Typing Game
           
 
           
@@ -68,7 +90,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -85,6 +107,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -108,6 +131,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../hierarchy/relations.html">API - RELATION</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Sphinx</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../sphinx/disqus.tutorial.html">Disqus</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Release note</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../history/release.html">Release Note</a></li>
@@ -116,6 +143,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -132,9 +160,13 @@
 
       <div class="wy-nav-content">
         
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
         
-          
+          <!--
+I didn't modify this HTML, but if you want to change the edit_on_github, you can consider modifying it.
+-->
+
+
 
 
 
@@ -162,6 +194,10 @@
       <li class="wy-breadcrumbs-aside">
         
             
+            
+              <a href="https://github.com/CarsonSlovoka/typing-game/blob/master/doc/source/game/typing_dropdown/dropdown.index.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
         
       </li>
     
@@ -173,6 +209,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
+
   <div class="section" id="introduction-to-game">
 <h1><a class="toc-backref" href="#id1">Introduction to game</a><a class="headerlink" href="#introduction-to-game" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
@@ -181,10 +218,29 @@
 <li><p><a class="reference internal" href="#introduction-to-game" id="id1">Introduction to game</a></p></li>
 </ul>
 </div>
-<p>It’s a simple game. It read the file (<code class="docutils literal notranslate"><span class="pre">words.txt</span></code>) as data to randomly generate a word.</p>
+<p>It’s a simple game. It read the file (<a class="reference external" href="https://github.com/CarsonSlovoka/typing-game/blob/Dev/typing_drop_down/test/words.txt">words.txt</a>) as data to randomly generate a word.</p>
 <p>At present, the game will only generate one word at once time, and the next word will show, if and only if typing correct of all.</p>
 </div>
 
+
+  
+    <div id="disqus_thread"></div>
+    <script>
+      var disqus_config = function () {
+      this.language = "en";  // change the language
+      this.page.url = "https://carsonslovoka.github.io/typing-game/en/source/game/typing_dropdown/dropdown.index.html";
+      //this.page.identifier = PAGE_IDENTIFIER;
+      };
+
+      (function() { // DON'T EDIT BELOW THIS LINE
+      var d = document, s = d.createElement('script');
+      s.src = 'https://typinggame.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  
 
            </div>
            
@@ -205,7 +261,8 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright Copyright (c) 2020 Carson
+        
+        &copy; Copyright 2020-2020 Carson
 
     </p>
   </div> 
@@ -220,7 +277,6 @@
   </div>
   
 
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
@@ -233,4 +289,9 @@
    
 
 </body>
+
+  <!--  Put this at the bottom, because this script will change elements. (use only for select)-->
+  
+        <script src="../../../_static/js/select.js"></script>
+  
 </html>
