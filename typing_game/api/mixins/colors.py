@@ -1,4 +1,4 @@
-from typing_drop_down.api.generics import RGBColor
+from typing_game.api.generics import RGBColor
 
 
 class TypingGameColorMixin:

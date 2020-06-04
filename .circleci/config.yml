@@ -76,18 +76,18 @@ workflows:
       - build:
           filters:
             branches:
-              only: Release
+              only: release
 
       - install_project:
           requires:
               - build  # waiting for `pip install` is ready.
           filters:
             branches:
-              only: Release
+              only: release
 
       - test:
           requires:
             - install_project
           filters:
             branches:
-              only: Release
+              only: release

@@ -4,11 +4,11 @@ from pathlib import Path
 if 'env path':
     sys.path.insert(0, str(Path(__file__).parent.parent))
     print(str(Path(__file__).parent.parent.parent.absolute()))
-    from typing_drop_down import config as default_config
-    from typing_drop_down import __version__
-    from typing_drop_down.api.utils import after_end
-    from typing_drop_down.core import TypingGameApp
-    from typing_drop_down.views import PyGameView
+    from typing_game import config as default_config
+    from typing_game import __version__
+    from typing_game.api.utils import after_end
+    from typing_game.core import TypingGameApp
+    from typing_game.views import PyGameView
     sys.path.remove(sys.path[0])
 
 import inspect

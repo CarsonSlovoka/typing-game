@@ -1,4 +1,12 @@
+"""
+What is this script doing?
+    This script is using to generate the document of sphinx early period.
+    But now, this script is not important anymore, because I decide to back to that doing control with the config,
+    so you can use config to satisfied most things, only with rare things you can't do, for example, setup_extra_html.
+"""
+
 from pathlib import Path
+from sphinx.builders.html import StandaloneHTMLBuilder  # self.globalcontext
 import sys
 if 'eny path':
     # sys.path
@@ -11,6 +19,8 @@ from sphinx.cmd.build import patch_docutils, docutils_namespace, handle_exceptio
 from os import startfile
 from pathlib import Path
 from typing import Union
+# from doc._ext.plugin_extra_html import setup_extra_html, setup_simple_extra_html
+import shutil
 
 
 def main(master_file: Path, source_dir: Path, output_dir: Path):
@@ -88,6 +98,12 @@ class SphinxBuilder:
                              doc_tree_dir, self.BUILD_FORMAT, conf_overrides,
                              status, warning, freshenv, warningiserror,
                              tags, verbosity, jobs, keep_going)
+                if self.FORCE_REBUILD:
+                    # The Force build seems not to real it is. so just in case, I do it by myself.
+                    shutil.rmtree(self.output_dir, ignore_errors=True)
+                if isinstance(app.builder, StandaloneHTMLBuilder):
+                    # setup_simple_extra_html(app)
+                    ...
                 app.build(self.FORCE_REBUILD, filenames)
 
                 return app.statuscode

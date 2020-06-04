@@ -1,6 +1,7 @@
-__all__ = ('TypingGameApp', 'TypingDropDown', )
+__all__ = ('TypingGameApp', 'TypingDropDown',)
 
 import pygame
+from pygame import Surface
 
 from typing import Generator
 
@@ -18,6 +19,8 @@ import abc
 from typing import Tuple, Union, List, Callable
 import re
 import types
+from time import sleep
+from dataclasses import dataclass
 
 
 class _TypingGameBase(
@@ -52,8 +55,14 @@ class TypingDropDown(_TypingGameBase):
 
     SPEED = 0.003
 
-    def __init__(self, words_file: Path):
+    def __init__(self, words_file: Union[Path, str]):
         PyGameView.__init__(self, caption_name='Typing Drop down')
+
+        if isinstance(words_file, str):
+            words_file = Path(words_file)
+        if not words_file.exists():
+            raise FileNotFoundError(f'{words_file.absolute()}')
+
         with open(str(words_file)) as f:
             self._word_set = f.read().splitlines()
         if len(self._word_set) == 0:
@@ -143,17 +152,16 @@ class TypingArticle(_TypingGameBase):
         self._article: Generator = self.generator_article(article_dir)
         self.article.send(None)  # init generator.
 
-    def draw_panel(self, accuracy: Tuple[int, int], wpm: int):
+    def draw_panel(self, accuracy: Tuple[int, int], wpm: int) -> pygame.Rect:
         num_ok_char, num_error_char = accuracy
         total_char = max(num_ok_char + num_error_char, 1)
-        self.draw_text(f'Accuracy:{(num_ok_char/total_char):<.2f}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
-        self.draw_text(f'WPM:{wpm}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+        return self.draw_text(f'Accuracy:{(num_ok_char / total_char):<.2f}', (10, 45), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
 
     def draw_article(self, article: str, x_init: int, y_init: int, font_color, y_gap: int):
         x, y = x_init, y_init
         for row_data in article.splitlines():
             pos = self.draw_text(row_data, (x, y), self.FONT_NAME_CONSOLAS, font_color)
-            self.draw_text('↙', (pos[0], pos[1]-9), self.FONT_NAME_MALGUNGOTHIC, font_color)
+            self.draw_text('↙', (pos[0], pos[1] - 9), self.FONT_NAME_MALGUNGOTHIC, font_color)
             y += y_gap
 
     @staticmethod
@@ -191,36 +199,44 @@ class TypingArticle(_TypingGameBase):
                     if n_level is not None:
                         break
 
-    def init_game(self, init_pos: Tuple[int, int], y_gap: int, n_level=None) -> \
-            Tuple[bool,
-                  List[Tuple[str, Tuple[int, int], bool, RGBColor, Callable]],
-                  int,
-                  Tuple[int, int],
-                  List[Tuple[int, int]],
-                  str, str]:
-        """
-        :param init_pos:
-        :param y_gap:
-        :param n_level: Increase automatically by default.
-        :returns
-            reset_flag
-            history_draw_list
-            underline_index
-            (num_ok_char, num_error_char)
-            article, pressed_word
-        """
-        num_ok_char, num_error_char = 0, 0
+    def init_game(self, y_gap: int, n_level=None):
+
+        @dataclass(eq=False)
+        class InitGameStruct:
+            __slots__ = ('reset_flag', 'surface_article', 'history_draw_list',
+                         'draw_index', 'underline_index', 'num_ok_char', 'num_error_char',
+                         'pos_list', 'chosen_article', 'pressed_words', 'reset_timer')
+            reset_flag: bool  # If reset is true, it will get the article by the level which you passed, Otherwise return the next level correspond to the current level.
+            surface_article: Surface  # A canvas that draws the article only.
+            history_draw_list: List[Tuple[str, Tuple[int, int], bool, RGBColor, Callable]]  # It records every information of the character. Get more, please see the instance.
+            draw_index: int  # represent the position of needs changing character while you pressed a key.
+            underline_index: int  # the position of underline after you pressed a key.
+            num_ok_char: int  # Numbers of character in which is correct.
+            num_error_char: int  # Numbers of character in which is wrong.
+            pos_list: List[Tuple[int, int]]  # The element means that the position that is for the character to draw.
+            chosen_article: str  # The string for represent the article that is user provided.
+            pressed_words: str  # To store the input string from the user
+            reset_timer: bool  # It's a Flag to tell the timer start to calculate the WPM etc.
+
         article, title, reset_flag = next(self.article) if n_level is None else self.article.send(n_level)
+        surface_article = Surface((self.WIDTH, self.HEIGHT))
+        surface_article.fill(self.BACKGROUND_COLOR)
 
         # we are only interested in the `pos` only.
-        pos_list = [init_pos, ]
+        init_pos = (0, 0)
+        pos_list = []
         cur_pos = init_pos
-        for char in article:
+        for idx, char in enumerate(article):
             if char == '\n':
-                char = ''
-                cur_pos = (init_pos[0], cur_pos[1] + y_gap)
-            cur_pos = self.draw_text(char, cur_pos, self.FONT_NAME_CONSOLAS, self.FORE_COLOR)  # it will return the pos
+                char = '↙'
+                cur_pos = (cur_pos[0], cur_pos[1] - 9)
             pos_list.append(cur_pos)
+            font_name = self.FONT_NAME_CONSOLAS if char != '↙' else self.FONT_NAME_MALGUNGOTHIC
+            cur_pos = self.draw_text(char, cur_pos, font_name, self.FORE_COLOR,
+                                     target=surface_article,
+                                     ).topright
+            if char == '↙':
+                cur_pos = (init_pos[0], cur_pos[1] + y_gap)
 
         # Draw a character one by one and pass the current position to the next function.
         history_draw_list: List[Tuple[str, Tuple[int, int],
@@ -235,40 +251,72 @@ class TypingArticle(_TypingGameBase):
              ]
 
         self.set_caption(title)
-        pressed_word = ''
+
+        draw_index = 0
         underline_index = 0
-        return reset_flag, history_draw_list, underline_index, (num_ok_char, num_error_char), pos_list, article, pressed_word
+        num_ok_char, num_error_char = 0, 0
+        pressed_word = ''
+        reset_timer = True
+        return InitGameStruct(reset_flag, surface_article, history_draw_list, draw_index, underline_index,
+                              num_ok_char, num_error_char, pos_list, article, pressed_word, reset_timer)
 
     def start_game(self, init_level: int):
         fps = 25
         clock = pygame.time.Clock()
         const_x_init = 50
-        const_y_init = 150
+        # const_y_init = 150
         const_y_gap = 50
-        cur_pos = (const_x_init, const_y_init)
-        _, history_draw_list, underline_index, (num_ok_char, num_error_char), pos_list, chosen_article, pressed_word = self.init_game(cur_pos, const_y_gap, init_level)
-        calculate_pm_info = self.generator_pm_info()
-        cpm, wpm = next(calculate_pm_info)  # init
+
+        game = self.init_game(const_y_gap, init_level)
         game_over_view = GameOverView(caption_name='Game over')  # cache view
         need_update = True
+        panel_bottom = None
+        calculate_pm_info = self.generator_pm_info()
+        cpm, wpm = next(calculate_pm_info)  # init
         while 1:
-            if need_update:
+            if game.underline_index == len(game.chosen_article):
+                # next level
+                game = self.init_game(const_y_gap)
+                if game.reset_flag:
+                    flag = game_over_view.show()
+                    if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
+                        return  # back to the home page
+
+                    # set level to the init_level
+                    game = self.init_game(const_y_gap, n_level=0)
+                cpm, wpm = calculate_pm_info.send(True)
+                continue
+
+            if not need_update:
+                if game.num_ok_char + game.num_error_char > 4:
+                    # Update WPM if and only if the length of typing character greater than 4
+                    pygame.draw.rect(self.window, self.BACKGROUND_COLOR, (10, 5, self.WIDTH, 45))
+                    self.draw_text(f'WPM:{wpm}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+                    self.view_update()
+            else:
                 self.clear_canvas()
-                self.draw_panel((num_ok_char, num_error_char), wpm)
-                self.draw_article(chosen_article, const_x_init, const_y_init, font_color=self.FORE_COLOR, y_gap=const_y_gap)
-                for cur_char, pos, modify_flag, font_color, cur_draw in history_draw_list:
+                if game.num_ok_char + game.num_error_char >= 5:
+                    self.draw_text(f'WPM:{wpm}', (10, 5), self.FONT_NAME_COMIC_SANS_MS, self.INFO_COLOR)
+                init_panel_bottom = self.draw_panel((game.num_ok_char, game.num_error_char), wpm).bottomleft
+                if panel_bottom is None:
+                    panel_bottom = init_panel_bottom
+
+                # self.draw_article(chosen_article, const_x_init, const_y_init, font_color=self.FORE_COLOR, y_gap=const_y_gap)
+                for cur_char, pos, modify_flag, font_color, cur_draw in (game.history_draw_list[game.draw_index],):
                     if cur_draw is None:
                         continue
-                    if cur_char == '\n':
-                        self.draw_text('↙', (pos[0], pos[1]-9), self.FONT_NAME_MALGUNGOTHIC, font_color)
-                        continue
-                    cur_draw(cur_char, pos, font_color)
+                    cur_draw(cur_char, pos, font_color) if cur_char != '\n' else \
+                        self.draw_text('↙', pos, self.FONT_NAME_MALGUNGOTHIC, font_color, target=game.surface_article)
+
                 # underline = re.sub(r'[^\n]', " ", pressed_word) + "_"  # Any characters except not space.
                 # self.draw_article(underline, const_x_init, const_y_init + 10, font_color=self.TYPING_CUR_POS_COLOR, y_gap=const_y_gap)
-                underline_pos = (pos_list[underline_index][0], pos_list[underline_index][1]+10)
+                self._window.blit(game.surface_article, (const_x_init, panel_bottom[1] + const_y_gap))
+                underline_pos = (game.pos_list[game.underline_index][0] + const_x_init,
+                                 game.pos_list[game.underline_index][1] + 10 + panel_bottom[1] + const_y_gap)
                 self.draw_text('_', underline_pos, self.FONT_NAME_CONSOLAS, self.TYPING_CUR_POS_COLOR)
                 self.view_update()
                 need_update = False
+
             for event in self.get_event():
                 if self.is_quit_event(event):
                     self.exit_app()
@@ -283,65 +331,58 @@ class TypingArticle(_TypingGameBase):
                         continue
 
                     need_update = True
-
-                    if underline_index == len(chosen_article):
-                        # next level
-                        reset_flag, history_draw_list, underline_index, (num_ok_char, num_error_char), pos_list, chosen_article, pressed_word = self.init_game((const_x_init, const_y_init), const_y_gap)
-                        if reset_flag:
-                            flag = game_over_view.show()
-                            if flag is not None and flag == GameOverView.RTN_MSG_BACK_TO_HOME:
-                                return  # back to the home page
-
-                            # set level to the init_level
-                            _, history_draw_list, underline_index, (num_ok_char, num_error_char), pos_list, chosen_article, pressed_word = \
-                                self.init_game((const_x_init, const_y_init), const_y_gap, n_level=0)
+                    if game.reset_timer:
                         cpm, wpm = calculate_pm_info.send(True)
-                        break
+                        # sleep(0.0666)  # 180 wpm = 15 cps => 1 char
+                        game.reset_timer = False
 
                     if pressed_key == '\r':
                         pressed_key = '\n'
 
                     # typing correct
-                    if chosen_article[underline_index] == pressed_key:
-                        num_ok_char += 1
-                        pressed_word += pressed_key
-                        is_modify_flag = history_draw_list[underline_index][2]
+                    if game.chosen_article[game.underline_index] == pressed_key:
+                        game.num_ok_char += 1
+                        game.pressed_words += pressed_key
+                        is_modify_flag = game.history_draw_list[game.underline_index][2]
                         font_color = self.TYPING_CORRECT_COLOR if not is_modify_flag else self.TYPING_MODIFY_COLOR
-                        history_draw_list[underline_index] = (pressed_key, pos_list[underline_index], False, font_color,
-                                                              lambda char, _pos, color: self.draw_text(char, _pos, self.FONT_NAME_CONSOLAS, color))
-                        underline_index += 1
+                        game.history_draw_list[game.underline_index] = (pressed_key, game.pos_list[game.underline_index], False, font_color,
+                                                                        lambda char, _pos, color: self.draw_text(char, _pos, self.FONT_NAME_CONSOLAS, color, target=game.surface_article))
+                        game.draw_index = game.underline_index
+                        game.underline_index += 1
                     elif pressed_key == '\b':
-                        pre_index = max(underline_index - 1, 0)
-                        pre_color = history_draw_list[pre_index][3]
+                        pre_index = max(game.underline_index - 1, 0)
+                        pre_color = game.history_draw_list[pre_index][3]
                         is_modify_flag = True if pre_color != self.TYPING_CORRECT_COLOR else False  # Only with typing wrong can set the True, so the original typing correct that doesn't affect.
 
                         if pre_color in (self.TYPING_CORRECT_COLOR, self.TYPING_MODIFY_COLOR):
-                            num_ok_char -= 1
+                            game.num_ok_char -= 1
                         if pre_color == self.TYPING_ERROR_COLOR:
-                            num_error_char -= 1
+                            game.num_error_char -= 1
 
-                        history_draw_list[pre_index] = (chosen_article[pre_index], pos_list[pre_index], is_modify_flag, self.FORE_COLOR,
-                                                        lambda char, _pos, color: self.draw_text(char, _pos, self.FONT_NAME_CONSOLAS, color))
-                        pressed_word = pressed_word[: -1]
-                        underline_index = max(underline_index - 1, 0)
+                        game.history_draw_list[pre_index] = (game.chosen_article[pre_index], game.pos_list[pre_index], is_modify_flag, self.FORE_COLOR,
+                                                             lambda char, _pos, color: self.draw_text(char, _pos, self.FONT_NAME_CONSOLAS, color, target=game.surface_article))
+                        game.pressed_words = game.pressed_words[: -1]
+                        game.underline_index = max(game.underline_index - 1, 0)
+                        game.draw_index = game.underline_index
                     else:  # typing wrong
-                        if len(pressed_word + ' ') <= len(chosen_article):
-                            num_error_char += 1
-                            history_draw_list[underline_index] = (
-                                chosen_article[underline_index], pos_list[underline_index], False, self.TYPING_ERROR_COLOR,
-                                lambda char, _pos, color: self.draw_text(char, _pos, self.FONT_NAME_CONSOLAS, color)
+                        if len(game.pressed_words + ' ') <= len(game.chosen_article):
+                            game.num_error_char += 1
+                            game.history_draw_list[game.underline_index] = (
+                                game.chosen_article[game.underline_index], game.pos_list[game.underline_index], False, self.TYPING_ERROR_COLOR,
+                                lambda char, _pos, color: self.draw_text(char, _pos, self.FONT_NAME_CONSOLAS, color, target=game.surface_article)
                             )
                             # pressed_word += ' '
-                            pressed_word += chosen_article[underline_index]
-                            underline_index += 1
+                            game.pressed_words += game.chosen_article[game.underline_index]
+                            game.draw_index = game.underline_index
+                            game.underline_index += 1
 
-                    cpm, wpm = calculate_pm_info.send(num_ok_char)
+            cpm, wpm = calculate_pm_info.send(game.num_ok_char)
 
             clock.tick(fps)  # Make sure that the FPS is keeping to this value.
 
 
 class TypingGameApp(HomeView, SafeMember):
-    __slots__ = ('_config', ) + HomeView.__slots__
+    __slots__ = ('_config',) + HomeView.__slots__
     SPARK_IMAGE = Path(__file__).parent / Path('_static/home.jpg')
 
     def __init__(self, conf: config):

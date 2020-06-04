@@ -6,13 +6,13 @@ from setuptools.command.test import test as test_class
 
 
 if 'env path':
-    import typing_drop_down
-    from typing_drop_down import __version__
-    from typing_drop_down.test.test import test_setup
+    import typing_game
+    from typing_game import __version__, __description__
+    from typing_game.test.test import test_setup
 
 VERSION_NUMBER = __version__
 DOWNLOAD_VERSION = __version__
-PACKAGES_DIR = typing_drop_down.__name__
+PACKAGES_DIR = typing_game.__name__
 SETUP_NAME = 'typing-game'  # PACKAGES_DIR.replace('_', '-')
 
 GITHUB_URL = f'https://github.com/CarsonSlovoka/{SETUP_NAME}/tree/master'
@@ -42,8 +42,15 @@ def custom_find_package_modules(self, package, package_dir):
 setuptools.command.build_py.build_py.find_package_modules = custom_find_package_modules
 
 
+LONG_DESCRIPTION = ""
 with open('README.rst', encoding='utf-8') as f:
-    LONG_DESCRIPTION = f.read()
+    # https://pepy.tech can't be attached.
+    for begin_idx, line in enumerate(f):
+        if line.strip().startswith('===='):
+            break
+    f.seek(0)
+    LONG_DESCRIPTION = ''.join([line for idx, line in enumerate(f) if idx >= begin_idx])
+
 
 with open('requirements.txt') as req_txt:
     LIST_REQUIRES = [line.strip() for line in req_txt if not line.startswith('#') and line.strip() != '']
@@ -52,7 +59,7 @@ setup(
     name=SETUP_NAME,
     version=VERSION_NUMBER,  # x.x.x.{dev, a, b, rc}
 
-    packages=find_packages(exclude=['*.test_cases']),
+    packages=find_packages(exclude=['*.test_cases']),  # Only include the directory that contains the file of __init__.
 
     include_package_data=True,  # include any data files it finds inside your package directories that are specified by your MANIFEST.in
     package_data={f'{PACKAGES_DIR}': ['_static/home.jpg', ],
@@ -62,7 +69,7 @@ setup(
     author_email='jackparadise520a@gmail.com',
     install_requires=LIST_REQUIRES,
     url=GITHUB_URL,
-    description='Tilt corrector for the text image',
+    description=__description__,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/x-rst',
     keywords=['typing', 'game', 'pygame', 'pygame-menu', ],
