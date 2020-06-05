@@ -10,6 +10,14 @@
 Release Note
 ==================
 
+0.3.1
+=========
+
+Update link: I forgot to update the link when I change the project name.
+
+.. note:: Github page update is slow such that the select language bar may wait for a while then working.
+
+
 0.3.0
 =========
 
