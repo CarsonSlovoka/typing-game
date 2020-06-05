@@ -49,7 +49,8 @@ with open('README.rst', encoding='utf-8') as f:
         if line.strip().startswith('===='):
             break
     f.seek(0)
-    LONG_DESCRIPTION = ''.join([line for idx, line in enumerate(f) if idx >= begin_idx])
+    LONG_DESCRIPTION = ''.join([line if line.strip() != '.. uml::' else line.replace('..', '...')  # PyPI does not support uml
+                                for idx, line in enumerate(f) if idx >= begin_idx])
 
 
 with open('requirements.txt') as req_txt:
