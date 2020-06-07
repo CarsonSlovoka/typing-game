@@ -25,9 +25,6 @@ def get_config(config_path: Path) -> default_config:
     if not config_path.exists() and not config_path.is_file():
         raise FileExistsError(f'{config_path.absolute()}')
 
-    new_config_path = Path(__file__).parent / Path('temp/temp_conf.py')
-    new_config_path.parent.mkdir(exist_ok=True)
-
     # exec(open(config).read())
     org_cwd = os.getcwd()
     with after_end(cb_fun=lambda: [
