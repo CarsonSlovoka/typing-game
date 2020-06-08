@@ -3,6 +3,12 @@
 {% endif %}
 
 {% extends "layout.html" %}
+
+{% block head %}
+  <!-- <script src="_static/js/navbar.js"></script> -->
+  {{ js_tag("_static/js/navbar.js") }}
+{% endblock %}
+
 {% block body %}
 
   {{ body }}
