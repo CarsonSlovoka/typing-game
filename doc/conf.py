@@ -1,3 +1,8 @@
+"""
+http://localhost:8000/
+python -m http.server
+"""
+
 import pygments.styles
 from pathlib import Path
 from datetime import datetime
@@ -70,9 +75,11 @@ if 'html setting':
                       'css/pygments.vim.css',
                       'css/themes/rtd.page.css',
                       'css/select.css',
+                      'css/toggle_btn.css',
                       ]
     html_js_files = [  # search ``def setup_js_tag_helper``
         'js/select.js',
+        'js/navbar.js',
     ]
 
     html_show_sourcelink = False
