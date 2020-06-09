@@ -13,7 +13,7 @@ indent_style = space
 [*.{puml,nsi,nsh}]
 indent_style=tab
 
-[*.{html, js}]
+[*.{html, js, scss}]
 indent_size = 2
 
 # [*.other]

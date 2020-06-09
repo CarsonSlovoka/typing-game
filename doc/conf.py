@@ -75,6 +75,7 @@ if 'html setting':
                       'css/pygments.vim.css',
                       'css/themes/rtd.page.css',
                       'css/select.css',
+                      'css/toggle_btn.css',
                       ]
     html_js_files = [  # search ``def setup_js_tag_helper``
         'js/select.js',

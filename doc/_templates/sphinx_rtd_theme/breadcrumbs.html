@@ -29,8 +29,12 @@ Previous, Next
 {% set display_gitlab = True %}
 {% endif %}
 
-<button id="ShowNav">ShowNav</button>
-<button id="HideNav">HideNav</button>
+<span class="info" id="label_nav_bar"></span>
+<label class="switch" >
+  <input type="checkbox" id="nav_bar_chkbox">
+  <span class="slider round"></span>
+</label>
+
 
 <div role="navigation" aria-label="breadcrumbs navigation">
 
