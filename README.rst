@@ -5,7 +5,7 @@
         <a href="https://pypi.org/project/typing-game/">
         <img src="https://img.shields.io/static/v1?&style=plastic&logo=pypi&label=App&message=typing-game&color=00FFFF"/></a>
 
-        <a href="https://pypi.org/project/carson-tool.typing-gameTW/">
+        <a href="https://pypi.org/project/typing-game/">
         <img src="https://img.shields.io/pypi/v/typing-game.svg?&style=plastic&logo=pypi&color=00FFFF"/></a>
 
         <a href="https://pypi.org/project/typing-game/">
